@@ -67,35 +67,39 @@ class TransactionViewSet(ModelViewSet):
     @action(methods=['GET'], detail=False, url_path='verify')
     def transaction_verify(self, request):
         reference = request.query_params.get('trxref')
-        headers = {
-                "Authorization": f"Bearer {config("PAYSTACK_SECRET_KEY")}",
-                "Content-Type": "application/json"
-        }
-        response = requests.get(f"https://api.paystack.co/transaction/verify/{reference}", headers=headers)
-        response_data = response.json()
-        print(response_data)
-        metadata = response_data['data']['metadata']
-        if response_data.get('status') and response_data['data']['status'] == 'success':
-            txn_id = response_data['data']['id']
-            txn_status = response_data['data']['status']
-            amount_paid = response_data['data']['amount'] // 100
-            ip_address = response_data['data']['ip_address']
-            txn_reference = response_data['data']['reference']
-            first_name = metadata['first_name']
-            last_name = metadata['last_name']
-            received_from = f"{first_name} {last_name}"
-            customer_email = metadata['email']
-            customer_code = metadata['customer_code']
-            payment = Payment.objects.get(id=metadata['payment_id'])
-            department = Department.objects.get(id=metadata['department_id'])
-            transaction = Transaction.objects.create(
-                txn_id=txn_id, status=txn_status, amount_paid=amount_paid, ip_address=ip_address,
-                txn_reference=txn_reference, customer_code=customer_code, payment=payment,
-                department=department, received_from=received_from, first_name=first_name,
-                last_name=last_name, customer_email=customer_email
-            )
-            serializer = self.get_serializer(transaction)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        txn = Transaction.objects.filter(txn_reference=reference).exists()
+        if txn:
+            return Response(self.get_serializer(txn).data, status=status.HTTP_200_OK)
+        else:
+            headers = {
+                    "Authorization": f"Bearer {config("PAYSTACK_SECRET_KEY")}",
+                    "Content-Type": "application/json"
+            }
+            response = requests.get(f"https://api.paystack.co/transaction/verify/{reference}", headers=headers)
+            response_data = response.json()
+            print(response_data)
+            metadata = response_data['data']['metadata']
+            if response_data.get('status') and response_data['data']['status'] == 'success':
+                txn_id = response_data['data']['id']
+                txn_status = response_data['data']['status']
+                amount_paid = response_data['data']['amount'] // 100
+                ip_address = response_data['data']['ip_address']
+                txn_reference = response_data['data']['reference']
+                first_name = metadata['first_name']
+                last_name = metadata['last_name']
+                received_from = f"{first_name} {last_name}"
+                customer_email = metadata['email']
+                customer_code = metadata['customer_code']
+                payment = Payment.objects.get(id=metadata['payment_id'])
+                department = Department.objects.get(id=metadata['department_id'])
+                transaction = Transaction.objects.create(
+                    txn_id=txn_id, status=txn_status, amount_paid=amount_paid, ip_address=ip_address,
+                    txn_reference=txn_reference, customer_code=customer_code, payment=payment,
+                    department=department, received_from=received_from, first_name=first_name,
+                    last_name=last_name, customer_email=customer_email
+                )
+                serializer = self.get_serializer(transaction)
+                return Response(serializer.data, status=status.HTTP_200_OK)
         return Response({"error": "Transaction Failed"}, status=status.HTTP_400_BAD_REQUEST)
 
 
