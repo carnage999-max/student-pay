@@ -1,14 +1,17 @@
+import os
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status
+from django.http import FileResponse
 from .models import Payment, Transaction
 from accounts.models import Department
 from .serializers import PaymentSerializer, TransactionSerializer
 from decouple import config
 import requests
 import json
+from num2words import num2words
+from receipt_utils.create_receipt import generate_receipt
 
 
 class PaymentViewSet(ModelViewSet):
@@ -67,9 +70,9 @@ class TransactionViewSet(ModelViewSet):
     @action(methods=['GET'], detail=False, url_path='verify')
     def transaction_verify(self, request):
         reference = request.query_params.get('trxref')
-        txn = Transaction.objects.filter(txn_reference=reference).exists()
-        if txn:
-            return Response(self.get_serializer(txn).data, status=status.HTTP_200_OK)
+        txn = Transaction.objects.filter(txn_reference=reference)
+        if txn.exists():
+            return Response(self.get_serializer(txn.first()).data, status=status.HTTP_200_OK)
         else:
             headers = {
                     "Authorization": f"Bearer {config("PAYSTACK_SECRET_KEY")}",
@@ -85,6 +88,7 @@ class TransactionViewSet(ModelViewSet):
                 amount_paid = response_data['data']['amount'] // 100
                 ip_address = response_data['data']['ip_address']
                 txn_reference = response_data['data']['reference']
+                date_paid = response_data['data']['paid_at'].split("T")[0]
                 first_name = metadata['first_name']
                 last_name = metadata['last_name']
                 received_from = f"{first_name} {last_name}"
@@ -92,14 +96,29 @@ class TransactionViewSet(ModelViewSet):
                 customer_code = metadata['customer_code']
                 payment = Payment.objects.get(id=metadata['payment_id'])
                 department = Department.objects.get(id=metadata['department_id'])
-                transaction = Transaction.objects.create(
+                receipt_data = {
+                    'header': department.dept_name, 
+                    'date': date_paid,
+                    'received_from': received_from,
+                    "payment_for": payment.payment_for,
+                    "amount_words": num2words(amount_paid, to='currency', lang='en_NG'),
+                    "amount": amount_paid,
+                    "logo_path": "logo.png",
+                    "president_signature": "president_sig.png",
+                    "financial_signature": "finsec_sig.png"
+                }
+                Transaction.objects.create(
                     txn_id=txn_id, status=txn_status, amount_paid=amount_paid, ip_address=ip_address,
                     txn_reference=txn_reference, customer_code=customer_code, payment=payment,
                     department=department, received_from=received_from, first_name=first_name,
                     last_name=last_name, customer_email=customer_email
                 )
-                serializer = self.get_serializer(transaction)
-                return Response(serializer.data, status=status.HTTP_200_OK)
+                filename = f"{received_from.replace(' ', '_')}_{date_paid}.pdf"
+                try:
+                    pdf_stream = generate_receipt(data=receipt_data)
+                    return FileResponse(pdf_stream, content_type="application/pdf", as_attachment=False, filename=filename)
+                except Exception as e:
+                    return Response({"error": "Problem encountered creating receipt", 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"error": "Transaction Failed"}, status=status.HTTP_400_BAD_REQUEST)
 
 

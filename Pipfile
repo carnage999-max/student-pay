@@ -10,6 +10,9 @@ mysqlclient = "*"
 python-decouple = "*"
 requests = "*"
 djangorestframework-simplejwt = "*"
+reportlab = "*"
+num2word = "*"
+num2words = "*"
 
 [dev-packages]
 
