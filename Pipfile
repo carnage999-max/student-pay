@@ -13,6 +13,9 @@ djangorestframework-simplejwt = "*"
 reportlab = "*"
 num2word = "*"
 num2words = "*"
+supabase = "*"
+numpy = "*"
+pandas = "*"
 
 [dev-packages]
 

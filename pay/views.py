@@ -12,6 +12,12 @@ import requests
 import json
 from num2words import num2words
 from receipt_utils.create_receipt import generate_receipt
+from supabase import create_client, Client
+
+
+url = config("SUPABASE_URL")
+key = config("SUPABASE_KEY")
+supabase: Client = create_client(url, key)
 
 
 class PaymentViewSet(ModelViewSet):
@@ -107,7 +113,7 @@ class TransactionViewSet(ModelViewSet):
                     "president_signature": "president_sig.png",
                     "financial_signature": "finsec_sig.png"
                 }
-                Transaction.objects.create(
+                transaction = Transaction.objects.create(
                     txn_id=txn_id, status=txn_status, amount_paid=amount_paid, ip_address=ip_address,
                     txn_reference=txn_reference, customer_code=customer_code, payment=payment,
                     department=department, received_from=received_from, first_name=first_name,
@@ -116,6 +122,16 @@ class TransactionViewSet(ModelViewSet):
                 filename = f"{received_from.replace(' ', '_')}_{date_paid}.pdf"
                 try:
                     pdf_stream = generate_receipt(data=receipt_data)
+                    pdf_stream.seek(0)
+                    supabase.storage.from_("receipts").upload(
+                        path=filename,
+                        file=pdf_stream.read(),
+                        file_options={"content-type": "application/pdf", "upsert": 'true'}
+                    )
+                    receipt_url = supabase.storage.from_("receipts").get_public_url(filename)
+                    transaction.receipt_url = receipt_url
+                    transaction.save()
+                    pdf_stream.seek(0)
                     return FileResponse(pdf_stream, content_type="application/pdf", as_attachment=False, filename=filename)
                 except Exception as e:
                     return Response({"error": "Problem encountered creating receipt", 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)

@@ -24,6 +24,7 @@ class Transaction(models.Model):
     received_from = models.CharField(_("Received From"), max_length=50, default="XXXXXXXXXXXXXX")
     ip_address = models.CharField(_("IP Address"), max_length=20, default="XXXXXXXXXXX")
     txn_reference = models.CharField(_("Transaction Reference"), max_length=15, default="XXXXXXXXXXXXX" )
+    receipt_url = models.CharField(_("Receipt URL"), max_length=200, default="XXXXXXXXXXXXX", null=True, blank=True)
     
     def __str__(self):
         return self.received_from
