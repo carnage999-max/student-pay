@@ -2,12 +2,16 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.decorators import action
 from .models import Department
 from .serializers import RegisterDepartmentSerializer, LoginSerializer, DepartmentSerializer
 from django.contrib.auth import authenticate
 from .utils import get_specific_bank_code, resolve_account_number
 from decouple import config
 import requests
+from io import BytesIO
+from supabase_util import supabase
 
 
 class RegisterViewSet(ModelViewSet):
@@ -38,6 +42,21 @@ class LoginViewSet(ModelViewSet):
 class DepartmentViewSet(ModelViewSet):
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_permissions(self):
+        if self.action in ['delete', 'update', 'partial_update']:
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [AllowAny]
+        return [permission() for permission in permission_classes]
+    
+    
+    def get_queryset(self):
+        if self.action not in ["retrieve", "list"]:
+            return self.queryset.filter(dept_name=self.request.user)
+        else:
+            return self.queryset
     
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -45,6 +64,9 @@ class DepartmentViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         bank_name = serializer.validated_data.get('bank_name')
         account_number = serializer.validated_data.get('account_number')
+        logo = request.FILES.get('logo')
+        president_signature = request.FILES.get('president_signature_url')
+        secretary_signature = request.FILES.get('secretary_signature_url')
         try:
             bank_code = get_specific_bank_code(bank_name)
             account_name = resolve_account_number(account_number, bank_code)
@@ -66,6 +88,34 @@ class DepartmentViewSet(ModelViewSet):
         }
         response = requests.post(url=url, headers=headers, data=data)
         print(response.json())
+        # Upload Image files to supabase
+        
+        # Upload logo if present
+        if logo:
+            supabase.storage.from_("logo").upload(
+                path=logo.name,
+                file=logo.read(),
+                file_options={"upsert": 'true'}
+            )
+            instance.logo_url = supabase.storage.from_("logo").get_public_url(logo.name)
+
+        # Upload president signature if present
+        if president_signature:
+            supabase.storage.from_("signatures").upload(
+                path=president_signature.name,
+                file=president_signature.read(),
+                file_options={"upsert": 'true'}
+            )
+            instance.president_signature_url = supabase.storage.from_("signatures").get_public_url(president_signature.name)
+        # Upload secretary signature if present
+        if secretary_signature:
+            supabase.storage.from_("signatures").upload(
+                path=secretary_signature.name,
+                file=secretary_signature.read(),
+                file_options={"upsert": 'true'}
+            )
+            instance.secretary_signature_url = supabase.storage.from_("signatures").get_public_url(secretary_signature.name)
+        print(instance.president_signature_url)
         instance.sub_account_code = response.json()['data']['subaccount_code']
         self.perform_update(serializer)
         return Response(serializer.data, status=status.HTTP_200_OK)

@@ -1,4 +1,4 @@
-from rest_framework.serializers import ModelSerializer, Serializer, EmailField, CharField
+from rest_framework.serializers import ModelSerializer, Serializer, EmailField, CharField, ImageField
 from .models import Department
 
 
@@ -20,7 +20,10 @@ class LoginSerializer(Serializer):
     password = CharField(write_only=True)
     
 class DepartmentSerializer(ModelSerializer):
+    logo = ImageField(write_only=True, allow_empty_file=True, required=False)
+    president_signature = ImageField(write_only=True, allow_empty_file=True, required=False)
+    secretary_signature = ImageField(write_only=True, allow_empty_file=True, required=False)
     class Meta:
         model = Department
-        fields = ['email', 'dept_name', 'account_number', 'bank_name']
-        read_only_fields = ['email']
+        fields = ['id', 'email', 'dept_name', 'account_number', 'bank_name', 'logo', 'logo_url', 'president_signature_url', 'president_signature', 'secretary_signature_url', 'secretary_signature']
+        read_only_fields = ['id', 'email', 'logo_url', 'president_signature_url', 'secretary_signature_url']

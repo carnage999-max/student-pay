@@ -44,6 +44,10 @@ class Department(AbstractUser):
     bank_code = models.CharField(max_length=10, default="000")
     account_name = models.CharField(_("Account Name"), max_length=200, default="XXXXXXXXXX")
     sub_account_code = models.CharField(_("Sub Account"), max_length=20, default="XXXXXXXXXXXX")
+    logo_url = models.CharField(_("Link to Logo"), max_length=200, null=True, blank=True)
+    president_signature_url = models.CharField(_("Link to President Signature"), max_length=200, null=True, blank=True)
+    secretary_signature_url = models.CharField(_("Link to Financial Secretary Signature"), max_length=200, null=True, blank=True)
+    
     
     
     USERNAME_FIELD = "email"

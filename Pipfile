@@ -16,6 +16,7 @@ num2words = "*"
 supabase = "*"
 numpy = "*"
 pandas = "*"
+django-cors-headers = "*"
 
 [dev-packages]
 

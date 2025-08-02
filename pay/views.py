@@ -2,6 +2,7 @@ import os
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework import status
 from django.http import FileResponse
 from .models import Payment, Transaction
@@ -12,21 +13,36 @@ import requests
 import json
 from num2words import num2words
 from receipt_utils.create_receipt import generate_receipt
-from supabase import create_client, Client
-
-
-url = config("SUPABASE_URL")
-key = config("SUPABASE_KEY")
-supabase: Client = create_client(url, key)
+from supabase_util import supabase
 
 
 class PaymentViewSet(ModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'delete']:
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [AllowAny]
+        return [permission() for permission in permission_classes]
     
 class TransactionViewSet(ModelViewSet):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
+    permission_classes = [AllowAny]
+    
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [IsAuthenticated]
+        if self.action == 'update':
+            permission_classes = [IsAdminUser]
+        else:
+            permission_classes = [AllowAny]
+        return [permission() for permission in permission_classes]
+    
+    
     
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -34,8 +50,10 @@ class TransactionViewSet(ModelViewSet):
         first_name = serializer.validated_data['first_name']
         last_name = serializer.validated_data['last_name']
         email = serializer.validated_data['customer_email']
-        department = (serializer.validated_data['department']).id
-        payment = (serializer.validated_data['payment']).id
+        department = Department.objects.get(id=int(request.data.get('department'))).id
+        payment = Payment.objects.get(id=int(request.data.get('payment'))).id
+        print(department)
+        print(payment)
         try:
             metadata = dict()
             # Create Paystack Customer Instance
@@ -103,15 +121,15 @@ class TransactionViewSet(ModelViewSet):
                 payment = Payment.objects.get(id=metadata['payment_id'])
                 department = Department.objects.get(id=metadata['department_id'])
                 receipt_data = {
-                    'header': department.dept_name, 
+                    'header': department.dept_name.upper(), 
                     'date': date_paid,
                     'received_from': received_from,
                     "payment_for": payment.payment_for,
-                    "amount_words": num2words(amount_paid, to='currency', lang='en_NG'),
+                    "amount_words": num2words(amount_paid * 100, to='currency', lang='en_NG'),
                     "amount": amount_paid,
-                    "logo_path": "logo.png",
-                    "president_signature": "president_sig.png",
-                    "financial_signature": "finsec_sig.png"
+                    "department_logo": department.logo_url,
+                    "president_signature": department.president_signature_url,
+                    "financial_signature": department.secretary_signature_url
                 }
                 transaction = Transaction.objects.create(
                     txn_id=txn_id, status=txn_status, amount_paid=amount_paid, ip_address=ip_address,
@@ -128,6 +146,7 @@ class TransactionViewSet(ModelViewSet):
                         file=pdf_stream.read(),
                         file_options={"content-type": "application/pdf", "upsert": 'true'}
                     )
+                    
                     receipt_url = supabase.storage.from_("receipts").get_public_url(filename)
                     transaction.receipt_url = receipt_url
                     transaction.save()
