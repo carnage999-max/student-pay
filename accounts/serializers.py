@@ -5,8 +5,9 @@ from .models import Department
 class RegisterDepartmentSerializer(ModelSerializer):
     class Meta:
         model = Department
-        fields = ['email', 'password', 'dept_name']
+        fields = ['id', 'email', 'password', 'dept_name']
         extra_kwargs = {'password':{'write_only': True}}
+        read_only_fields = ['id']
     
     def create(self, validated_data):
         password = validated_data.pop('password')
@@ -25,5 +26,5 @@ class DepartmentSerializer(ModelSerializer):
     secretary_signature = ImageField(write_only=True, allow_empty_file=True, required=False)
     class Meta:
         model = Department
-        fields = ['id', 'email', 'dept_name', 'account_number', 'bank_name', 'logo', 'logo_url', 'president_signature_url', 'president_signature', 'secretary_signature_url', 'secretary_signature']
-        read_only_fields = ['id', 'email', 'logo_url', 'president_signature_url', 'secretary_signature_url']
+        fields = ['id', 'email', 'dept_name', 'account_number', 'bank_name', 'logo', 'logo_url', 'president_signature_url', 'president_signature', 'secretary_signature_url', 'secretary_signature', 'account_name']
+        read_only_fields = ['id', 'email', 'logo_url', 'president_signature_url', 'secretary_signature_url', 'account_name']

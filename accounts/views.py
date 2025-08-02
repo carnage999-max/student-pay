@@ -19,6 +19,19 @@ class RegisterViewSet(ModelViewSet):
     serializer_class = RegisterDepartmentSerializer
     queryset = Department.objects.all()
     
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        refresh = RefreshToken.for_user(serializer.instance)
+        return Response({
+                "access_token": str(refresh.access_token),
+                "refresh_token": str(refresh),
+                "department_id": serializer.instance.id
+            }, status=status.HTTP_200_OK, headers=headers
+        )
+    
 class LoginViewSet(ModelViewSet):
     http_method_names = ['post']
     serializer_class = LoginSerializer
@@ -35,7 +48,8 @@ class LoginViewSet(ModelViewSet):
         return Response(
             {
                 "access_token": str(refresh.access_token),
-                "refresh_token": str(refresh)
+                "refresh_token": str(refresh),
+                "department_id": user.id
             }, status=status.HTTP_200_OK
         )
         
