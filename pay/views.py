@@ -1,12 +1,13 @@
 import os
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework import status
 from django.http import FileResponse
 from .models import Payment, Transaction
 from accounts.models import Department
+from accounts.utils import get_bank_codes
 from .serializers import PaymentSerializer, TransactionSerializer
 from decouple import config
 import requests
@@ -155,6 +156,13 @@ class TransactionViewSet(ModelViewSet):
                 except Exception as e:
                     return Response({"error": "Problem encountered creating receipt", 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"error": "Transaction Failed"}, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['GET'])
+def get_banks(request):
+    banks = [bank for bank in get_bank_codes()]
+    return Response({
+        "banks": banks
+    }, status=status.HTTP_200_OK)
 
 
         
