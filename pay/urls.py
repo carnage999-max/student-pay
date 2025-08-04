@@ -4,7 +4,7 @@ from .views import PaymentViewSet, TransactionViewSet, get_banks
 
 
 router = DefaultRouter()
-router.register('payment', PaymentViewSet, basename='payment')
+# router.register('payment', PaymentViewSet, basename='payment')
 router.register('pay', TransactionViewSet, basename='transaction')
 
 urlpatterns = [

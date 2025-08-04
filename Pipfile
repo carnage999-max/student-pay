@@ -17,6 +17,7 @@ supabase = "*"
 numpy = "*"
 pandas = "*"
 django-cors-headers = "*"
+drf-nested-routers = "*"
 
 [dev-packages]
 

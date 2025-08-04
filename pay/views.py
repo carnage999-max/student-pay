@@ -29,6 +29,14 @@ class PaymentViewSet(ModelViewSet):
             permission_classes = [AllowAny]
         return [permission() for permission in permission_classes]
     
+    def get_queryset(self):
+        department_id = self.kwargs.get("department_pk")
+        print(Department.objects.get(pk=department_id))
+        print(self.queryset.filter(department=Department.objects.get(pk=department_id)))
+        if self.action == 'list':
+            return self.queryset.filter(department=Department.objects.get(pk=department_id))
+        return self.queryset
+    
 class TransactionViewSet(ModelViewSet):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
