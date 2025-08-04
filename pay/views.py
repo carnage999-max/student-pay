@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action, api_view
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework import status
-from django.http import FileResponse
+from django.http import FileResponse, JsonResponse
 from .models import Payment, Transaction
 from accounts.models import Department
 from accounts.utils import get_bank_codes
@@ -159,10 +159,8 @@ class TransactionViewSet(ModelViewSet):
     
 @api_view(['GET'])
 def get_banks(request):
-    banks = [bank for bank in get_bank_codes()]
-    return Response({
-        "banks": banks
-    }, status=status.HTTP_200_OK)
+    banks = [{"name": bank_name, "code": bank_code} for bank_name, bank_code in get_bank_codes().items()]
+    return JsonResponse(banks, safe=False)
 
 
         
