@@ -89,7 +89,7 @@ class TransactionViewSet(ModelViewSet):
                 "subaccount": sub_account,
                 "bearer": "subaccount",
                 "metadata": metadata,
-                "callback_url": "http://localhost:8000/pay/pay/verify/"
+                "callback_url": "http://localhost:3000/payment/pay/success"
             }
             print(txn_data)
             #Initialize Paystack Transaction
@@ -105,7 +105,7 @@ class TransactionViewSet(ModelViewSet):
         reference = request.query_params.get('trxref')
         txn = Transaction.objects.filter(txn_reference=reference)
         if txn.exists():
-            return Response(self.get_serializer(txn.first()).data, status=status.HTTP_200_OK)
+            return Response({"receipt_url": self.get_serializer(txn.first()).data['receipt_url']}, status=status.HTTP_200_OK)
         else:
             headers = {
                     "Authorization": f"Bearer {config("PAYSTACK_SECRET_KEY")}",
@@ -159,8 +159,9 @@ class TransactionViewSet(ModelViewSet):
                     receipt_url = supabase.storage.from_("receipts").get_public_url(filename)
                     transaction.receipt_url = receipt_url
                     transaction.save()
-                    pdf_stream.seek(0)
-                    return FileResponse(pdf_stream, content_type="application/pdf", as_attachment=False, filename=filename)
+                    # pdf_stream.seek(0)
+                    # return FileResponse(pdf_stream, content_type="application/pdf", as_attachment=False, filename=filename)
+                    return Response({"receipt_url": receipt_url}, status=status.HTTP_200_OK)
                 except Exception as e:
                     return Response({"error": "Problem encountered creating receipt", 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"error": "Transaction Failed"}, status=status.HTTP_400_BAD_REQUEST)
