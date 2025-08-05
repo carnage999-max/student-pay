@@ -67,7 +67,7 @@ class DepartmentViewSet(ModelViewSet):
     
     
     def get_queryset(self):
-        if self.action not in ["retrieve", "list"]:
+        if self.action not in ["retrieve", "list"] or self.request.user.is_authenticated:
             return self.queryset.filter(dept_name=self.request.user)
         else:
             return self.queryset
@@ -101,7 +101,6 @@ class DepartmentViewSet(ModelViewSet):
             "percentage_charge": 0,
         }
         response = requests.post(url=url, headers=headers, data=data)
-        print(response.json())
         # Upload Image files to supabase
         
         # Upload logo if present
@@ -129,7 +128,6 @@ class DepartmentViewSet(ModelViewSet):
                 file_options={"upsert": 'true'}
             )
             instance.secretary_signature_url = supabase.storage.from_("signatures").get_public_url(secretary_signature.name)
-        print(instance.president_signature_url)
         instance.sub_account_code = response.json()['data']['subaccount_code']
         self.perform_update(serializer)
         return Response(serializer.data, status=status.HTTP_200_OK)

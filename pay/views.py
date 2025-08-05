@@ -61,8 +61,6 @@ class TransactionViewSet(ModelViewSet):
         email = serializer.validated_data['customer_email']
         department = Department.objects.get(id=int(request.data.get('department'))).id
         payment = Payment.objects.get(id=int(request.data.get('payment'))).id
-        print(department)
-        print(payment)
         try:
             metadata = dict()
             # Create Paystack Customer Instance
@@ -91,10 +89,8 @@ class TransactionViewSet(ModelViewSet):
                 "metadata": metadata,
                 "callback_url": "http://localhost:3000/payment/pay/success"
             }
-            print(txn_data)
             #Initialize Paystack Transaction
             response = requests.post(url="https://api.paystack.co/transaction/initialize", headers=headers, data=json.dumps(txn_data)).json()
-            print(response)
             authorization_url = response['data']['authorization_url']
         except Exception as e:
             return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -113,7 +109,6 @@ class TransactionViewSet(ModelViewSet):
             }
             response = requests.get(f"https://api.paystack.co/transaction/verify/{reference}", headers=headers)
             response_data = response.json()
-            print(response_data)
             metadata = response_data['data']['metadata']
             if response_data.get('status') and response_data['data']['status'] == 'success':
                 txn_id = response_data['data']['id']
