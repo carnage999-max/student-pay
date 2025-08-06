@@ -40,7 +40,6 @@ class PaymentViewSet(ModelViewSet):
 class TransactionViewSet(ModelViewSet):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
-    permission_classes = [AllowAny]
     
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
@@ -160,6 +159,10 @@ class TransactionViewSet(ModelViewSet):
                 except Exception as e:
                     return Response({"error": "Problem encountered creating receipt", 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"error": "Transaction Failed"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['GET'], url_path='stats', permission_classes=[IsAuthenticated])
+    def transaction_stats(self, request):
+        return Response({"e":4})
     
 @api_view(['GET'])
 def get_banks(request):
