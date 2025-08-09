@@ -2,7 +2,7 @@ import os
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.decorators import action, api_view
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser, IsAuthenticatedOrReadOnly
 from rest_framework import status
 from django.http import FileResponse, JsonResponse
 from .models import Payment, Transaction
@@ -15,6 +15,8 @@ import json
 from num2words import num2words
 from receipt_utils.create_receipt import generate_receipt
 from supabase_util import supabase
+
+from pay import models
 
 
 class PaymentViewSet(ModelViewSet):
@@ -40,15 +42,9 @@ class PaymentViewSet(ModelViewSet):
 class TransactionViewSet(ModelViewSet):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['post', 'get']
     
-    def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
-            permission_classes = [IsAuthenticated]
-        if self.action == 'update':
-            permission_classes = [IsAdminUser]
-        else:
-            permission_classes = [AllowAny]
-        return [permission() for permission in permission_classes]
     
     
     
@@ -162,8 +158,10 @@ class TransactionViewSet(ModelViewSet):
     
     @action(detail=False, methods=['GET'], url_path='stats', permission_classes=[IsAuthenticated])
     def transaction_stats(self, request):
-        return Response({"e":4})
-    
+        transactions = self.queryset.filter(department=request.user)
+        serializer = TransactionSerializer(transactions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 @api_view(['GET'])
 def get_banks(request):
     banks = [{"name": bank_name, "code": bank_code} for bank_name, bank_code in get_bank_codes().items()]

@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'pay',
     'accounts',
     'rest_framework',
+    # 'django_filters',
     
     'corsheaders',
 ]
@@ -144,7 +145,11 @@ AUTH_USER_MODEL = 'accounts.Department'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
     )
+    
 }
 
 SIMPLE_JWT = {
