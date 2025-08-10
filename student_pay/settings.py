@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     'pay',
     'accounts',
     'rest_framework',
-    # 'django_filters',
+    'django_filters',
     
     'corsheaders',
 ]
@@ -148,7 +148,8 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
-    )
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     
 }
 

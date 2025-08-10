@@ -4,7 +4,11 @@ from rest_framework.response import Response
 from rest_framework.decorators import action, api_view
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser, IsAuthenticatedOrReadOnly
 from rest_framework import status
+from rest_framework.filters import OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend, FilterSet, CharFilter
 from django.http import FileResponse, JsonResponse
+
+from pay.pagination import CustomResultsSetPagination
 from .models import Payment, Transaction
 from accounts.models import Department
 from accounts.utils import get_bank_codes
@@ -39,13 +43,29 @@ class PaymentViewSet(ModelViewSet):
             return self.queryset.filter(department=Department.objects.get(pk=department_id))
         return self.queryset
     
+class TransactionFilter(FilterSet):
+    payment_for = CharFilter(field_name='payment__payment_for', lookup_expr='icontains')
+    class Meta:
+        model = Transaction
+        fields = {
+            'received_from': ['exact', 'icontains'],
+            'status': ['exact'],
+        }
+    
 class TransactionViewSet(ModelViewSet):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
-    permission_classes = [IsAuthenticated]
     http_method_names = ['post', 'get']
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_class = TransactionFilter
+    ordering_fields = ['created_at']
+    pagination_class = CustomResultsSetPagination
     
     
+    def get_queryset(self):
+        if self.action == 'list' and self.request.user.is_authenticated:
+            return self.queryset.filter(department=self.request.user).order_by('-created_at')
+        return super().get_queryset()
     
     
     def create(self, request, *args, **kwargs):
@@ -158,9 +178,20 @@ class TransactionViewSet(ModelViewSet):
     
     @action(detail=False, methods=['GET'], url_path='stats', permission_classes=[IsAuthenticated])
     def transaction_stats(self, request):
-        transactions = self.queryset.filter(department=request.user)
-        serializer = TransactionSerializer(transactions, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        transactions = self.queryset.filter(department=request.user).order_by('-created_at')
+        payments = Payment.objects.filter(department=request.user)
+        total_payments = payments.count()
+        if not transactions.exists():
+            return Response({"message": "No transactions found for this department"}, status=status.HTTP_404_NOT_FOUND)
+        total_amount = sum(txn.amount_paid for txn in transactions)
+        total_transactions = transactions.count()
+        
+        stats = {
+            "total_amount": total_amount,
+            "total_transactions": total_transactions,
+            "total_payments": total_payments,
+        }
+        return Response(stats, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def get_banks(request):

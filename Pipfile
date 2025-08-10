@@ -18,7 +18,6 @@ numpy = "*"
 pandas = "*"
 django-cors-headers = "*"
 drf-nested-routers = "*"
-django-filter = "*"
 
 [dev-packages]
 
