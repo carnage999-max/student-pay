@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "eebd38272c227451a2e0c514c81737f11913457a900a68d7fd15810b6967dc51"
+            "sha256": "03c21f7d77d4ce20554e78ad6e18653a52c8b6a7107d8d3979614db722bf7e70"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -155,12 +155,12 @@
         },
         "django": {
             "hashes": [
-                "sha256:60c35bd96201b10c6e7a78121bd0da51084733efa303cc19ead021ab179cef5e",
-                "sha256:a1228c384f8fa13eebc015196db7b3e08722c5058d4758d20cb287503a540d8f"
+                "sha256:0745b25681b129a77aae3d4f6549b62d3913d74407831abaa0d9021a03954bae",
+                "sha256:2b2ada0ee8a5ff743a40e2b9820d1f8e24c11bac9ae6469cd548f0057ea6ddcd"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.10'",
-            "version": "==5.2.4"
+            "version": "==5.2.5"
         },
         "django-cors-headers": {
             "hashes": [
@@ -170,6 +170,15 @@
             "index": "pypi",
             "markers": "python_version >= '3.9'",
             "version": "==4.7.0"
+        },
+        "django-filter": {
+            "hashes": [
+                "sha256:1ec9eef48fa8da1c0ac9b411744b16c3f4c31176c867886e4c48da369c407153",
+                "sha256:4fa48677cf5857b9b1347fed23e355ea792464e0fe07244d1fdfb8a806215b80"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.9'",
+            "version": "==25.1"
         },
         "djangorestframework": {
             "hashes": [
@@ -203,14 +212,6 @@
             "index": "pypi",
             "markers": "python_version >= '3.8'",
             "version": "==0.94.2"
-        },
-        "gotrue": {
-            "hashes": [
-                "sha256:712e5018acc00d93cfc6d7bfddc3114eb3c420ab03b945757a8ba38c5fc3caa8",
-                "sha256:a9ced242b16c6d6bedc43bca21bbefea1ba5fb35fcdaad7d529342099d3b1767"
-            ],
-            "markers": "python_version >= '3.9' and python_version < '4.0'",
-            "version": "==2.11.4"
         },
         "h11": {
             "hashes": [
@@ -754,14 +755,6 @@
             "index": "pypi",
             "markers": "python_version >= '3.9' and python_version < '4.0'",
             "version": "==2.16.0"
-        },
-        "supafunc": {
-            "hashes": [
-                "sha256:26df9bd25ff2ef56cb5bfb8962de98f43331f7f8ff69572bac3ed9c3a9672040",
-                "sha256:a5b33c8baecb6b5297d25da29a2503e2ec67ee6986f3d44c137e651b8a59a17d"
-            ],
-            "markers": "python_version >= '3.9' and python_version < '4.0'",
-            "version": "==0.10.1"
         },
         "typing-extensions": {
             "hashes": [
