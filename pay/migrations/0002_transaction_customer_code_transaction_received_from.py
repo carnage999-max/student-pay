@@ -6,18 +6,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pay', '0001_initial'),
+        ("pay", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='transaction',
-            name='customer_code',
-            field=models.CharField(default='XXXXXXXXXXXXXX', max_length=20, verbose_name='Customer Code'),
+            model_name="transaction",
+            name="customer_code",
+            field=models.CharField(
+                default="XXXXXXXXXXXXXX", max_length=20, verbose_name="Customer Code"
+            ),
         ),
         migrations.AddField(
-            model_name='transaction',
-            name='received_from',
-            field=models.CharField(default='XXXXXXXXXXXXXX', max_length=50, verbose_name='Received From'),
+            model_name="transaction",
+            name="received_from",
+            field=models.CharField(
+                default="XXXXXXXXXXXXXX", max_length=50, verbose_name="Received From"
+            ),
         ),
     ]

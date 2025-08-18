@@ -8,19 +8,29 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pay', '0005_transaction_customer_email'),
+        ("pay", "0005_transaction_customer_email"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='transaction',
-            name='department',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='dept_txn', to=settings.AUTH_USER_MODEL),
+            model_name="transaction",
+            name="department",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="dept_txn",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterField(
-            model_name='transaction',
-            name='payment',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='payment_txn', to='pay.payment'),
+            model_name="transaction",
+            name="payment",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="payment_txn",
+                to="pay.payment",
+            ),
         ),
     ]

@@ -6,13 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pay', '0004_transaction_first_name_transaction_last_name'),
+        ("pay", "0004_transaction_first_name_transaction_last_name"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='transaction',
-            name='customer_email',
-            field=models.EmailField(default='customer@email.com', max_length=254, verbose_name='Customer E-mail'),
+            model_name="transaction",
+            name="customer_email",
+            field=models.EmailField(
+                default="customer@email.com",
+                max_length=254,
+                verbose_name="Customer E-mail",
+            ),
         ),
     ]

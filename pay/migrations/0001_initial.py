@@ -15,23 +15,85 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Payment',
+            name="Payment",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('payment_for', models.CharField(default='Fee', max_length=50, verbose_name='Payment For')),
-                ('amount_due', models.DecimalField(decimal_places=2, max_digits=6, verbose_name='Amount Expected')),
-                ('department', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='dept_payment', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "payment_for",
+                    models.CharField(
+                        default="Fee", max_length=50, verbose_name="Payment For"
+                    ),
+                ),
+                (
+                    "amount_due",
+                    models.DecimalField(
+                        decimal_places=2, max_digits=6, verbose_name="Amount Expected"
+                    ),
+                ),
+                (
+                    "department",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="dept_payment",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Transaction',
+            name="Transaction",
             fields=[
-                ('txn_id', models.BigAutoField(primary_key=True, serialize=False, verbose_name='Transaction ID')),
-                ('amount_paid', models.DecimalField(decimal_places=2, max_digits=6, verbose_name='Amount Paid')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Transaction Created Date')),
-                ('status', models.CharField(blank=True, max_length=20, null=True, verbose_name='Transaction Status')),
-                ('department', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='dept_txn', to=settings.AUTH_USER_MODEL)),
-                ('payment', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='payment_txn', to='pay.payment')),
+                (
+                    "txn_id",
+                    models.BigAutoField(
+                        primary_key=True, serialize=False, verbose_name="Transaction ID"
+                    ),
+                ),
+                (
+                    "amount_paid",
+                    models.DecimalField(
+                        decimal_places=2, max_digits=6, verbose_name="Amount Paid"
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Transaction Created Date"
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        blank=True,
+                        max_length=20,
+                        null=True,
+                        verbose_name="Transaction Status",
+                    ),
+                ),
+                (
+                    "department",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="dept_txn",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "payment",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="payment_txn",
+                        to="pay.payment",
+                    ),
+                ),
             ],
         ),
     ]

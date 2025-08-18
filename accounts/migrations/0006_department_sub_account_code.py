@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0005_alter_department_bank_code'),
+        ("accounts", "0005_alter_department_bank_code"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='department',
-            name='sub_account_code',
-            field=models.CharField(default='XXXXXXXXXXXX', max_length=20, verbose_name='Sub Account'),
+            model_name="department",
+            name="sub_account_code",
+            field=models.CharField(
+                default="XXXXXXXXXXXX", max_length=20, verbose_name="Sub Account"
+            ),
         ),
     ]

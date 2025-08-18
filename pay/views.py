@@ -1,4 +1,3 @@
-from time import time
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.decorators import action, api_view
@@ -16,11 +15,13 @@ from accounts.utils import get_bank_codes
 from .serializers import PaymentSerializer, TransactionSerializer
 from decouple import config
 import requests
-import json
 from num2words import num2words
 from receipt_utils.create_receipt import generate_receipt
 from supabase_util import supabase
-import traceback
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class PaymentViewSet(ModelViewSet):
@@ -162,7 +163,6 @@ class TransactionViewSet(ModelViewSet):
                 customer_email=transaction_data["customer_email"],
             )
             filename = f"{transaction_data['received_from'].replace(' ', '_')}_{transaction_data['date_paid']}.pdf"
-            print(filename)
             try:
                 pdf_stream = generate_receipt(data=receipt_data)
                 pdf_stream.seek(0)
@@ -185,7 +185,6 @@ class TransactionViewSet(ModelViewSet):
                     print(f"Successfully uploaded {filename} to Supabase.")
 
                 except requests.exceptions.RequestException as e:
-                    print(f"Upload failed: {e}")
                     if e.response is not None:
                         print(f"Response status: {e.response.status_code}")
                         print(f"Response text: {e.response.text}")
@@ -199,7 +198,6 @@ class TransactionViewSet(ModelViewSet):
                 return Response({"receipt_url": receipt_url}, status=status.HTTP_200_OK)
             except Exception as e:
                 print("Exception in receipt generation/upload:", str(e))
-                traceback.print_exc()
                 return Response(
                     {
                         "error": "Problem encountered creating receipt",
@@ -208,7 +206,6 @@ class TransactionViewSet(ModelViewSet):
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-        # return Response({"error": "Transaction Failed"}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(
         detail=False,
@@ -240,6 +237,15 @@ class TransactionViewSet(ModelViewSet):
 
 @api_view(["GET"])
 def get_banks(request):
+    """
+    The function `get_banks` retrieves a list of banks with their corresponding codes and returns them
+    as a JSON response.
+
+    :param request: The `request` parameter in the `get_banks` function is an object that contains
+    information about the current HTTP request.
+    :return: A list of dictionaries containing the names and codes of banks is being returned in JSON
+    format.
+    """
     banks = [
         {"name": bank_name, "code": bank_code}
         for bank_name, bank_code in get_bank_codes().items()

@@ -26,6 +26,19 @@ class Paystack:
         }
 
     def create_customer(self, data=None):
+        """
+        The `create_customer` function sends a POST request to create a customer using the Paystack API and
+        returns the customer code if successful.
+
+        :param data: The `data` parameter in the `create_customer` method is used to pass the information
+        required to create a customer. This information typically includes details such as the customer's
+        name, email, phone number, and other relevant details needed to create a customer profile in the
+        system. The `data` parameter
+        :return: If the `data` parameter is `None`, the function will return `{"error": "cannot create
+        customer - no data provided"}`. Otherwise, it will make a POST request to the Paystack API to create
+        a customer using the provided data. If successful, it will return the customer code. If an exception
+        occurs during the process, it will return `{"error": <error_message>}`
+        """
         try:
             if data == None:
                 return {"error": "cannot create customer - no data provided"}
@@ -40,6 +53,18 @@ class Paystack:
             return {"error": str(e)}
 
     def initiate_transaction(self, data=None):
+        """
+        The function `initiate_transaction` sends a POST request to the Paystack API to initialize a
+        transaction and returns the authorization URL.
+
+        :param data: The `data` parameter in the `initiate_transaction` method is used to provide the
+        necessary information required to initialize a transaction. This data typically includes details
+        such as the amount to be transacted, the email of the customer, and any other relevant
+        information needed to process the transaction
+        :return: If the `initiate_transaction` method is successful, it will return the authorization
+        URL for the transaction. If there is an error or an exception occurs during the process, it will
+        return a dictionary with an "error" key containing a description of the error.
+        """
         try:
             if data == None:
                 return {"error": "cannot create transaction - no data provided"}
@@ -54,6 +79,18 @@ class Paystack:
             return {"error": str(e)}
 
     def verify_transaction(self, txn_ref):
+        """
+        The `verify_transaction` function in Python verifies a transaction with Paystack API and returns
+        relevant transaction details or error messages.
+
+        :param txn_ref: The `txn_ref` parameter in the `verify_transaction` method is the transaction
+        reference that is used to identify a specific transaction in the Paystack API. It is passed to the
+        API endpoint to retrieve information about a particular transaction and verify its status
+        :return: The `verify_transaction` method returns a dictionary containing various transaction details
+        if the transaction is successfully verified. If the transaction status is "success", it extracts and
+        returns specific information such as transaction ID, status, amount paid, IP address, reference,
+        date paid, customer details, and metadata.
+        """
         response = requests.get(
             f"https://api.paystack.co/transaction/verify/{txn_ref}",
             headers=self.headers,

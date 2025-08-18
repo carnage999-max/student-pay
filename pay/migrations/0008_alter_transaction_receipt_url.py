@@ -6,13 +6,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pay', '0007_transaction_receipt_url'),
+        ("pay", "0007_transaction_receipt_url"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='transaction',
-            name='receipt_url',
-            field=models.CharField(blank=True, default='XXXXXXXXXXXXX', max_length=200, null=True, verbose_name='Receipt URL'),
+            model_name="transaction",
+            name="receipt_url",
+            field=models.CharField(
+                blank=True,
+                default="XXXXXXXXXXXXX",
+                max_length=200,
+                null=True,
+                verbose_name="Receipt URL",
+            ),
         ),
     ]

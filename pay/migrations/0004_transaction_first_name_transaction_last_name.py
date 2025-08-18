@@ -6,18 +6,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pay', '0003_transaction_ip_address_transaction_txn_reference'),
+        ("pay", "0003_transaction_ip_address_transaction_txn_reference"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='transaction',
-            name='first_name',
-            field=models.CharField(default='XXXXXXXXXXXXXX', max_length=20, verbose_name='First Name'),
+            model_name="transaction",
+            name="first_name",
+            field=models.CharField(
+                default="XXXXXXXXXXXXXX", max_length=20, verbose_name="First Name"
+            ),
         ),
         migrations.AddField(
-            model_name='transaction',
-            name='last_name',
-            field=models.CharField(default='XXXXXXXXXXXXXX', max_length=20, verbose_name='Last Name'),
+            model_name="transaction",
+            name="last_name",
+            field=models.CharField(
+                default="XXXXXXXXXXXXXX", max_length=20, verbose_name="Last Name"
+            ),
         ),
     ]

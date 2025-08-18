@@ -6,13 +6,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0007_alter_department_dept_name'),
+        ("accounts", "0007_alter_department_dept_name"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='department',
-            name='dept_name',
-            field=models.CharField(blank=True, default='dept_name', max_length=50, null=True, verbose_name='Department Name'),
+            model_name="department",
+            name="dept_name",
+            field=models.CharField(
+                blank=True,
+                default="dept_name",
+                max_length=50,
+                null=True,
+                verbose_name="Department Name",
+            ),
         ),
     ]

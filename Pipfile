@@ -19,6 +19,7 @@ pandas = "*"
 django-cors-headers = "*"
 drf-nested-routers = "*"
 django-filter = "*"
+pylint = "*"
 
 [dev-packages]
 

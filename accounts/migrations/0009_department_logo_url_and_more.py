@@ -6,23 +6,35 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0008_alter_department_dept_name'),
+        ("accounts", "0008_alter_department_dept_name"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='department',
-            name='logo_url',
-            field=models.CharField(blank=True, max_length=200, null=True, verbose_name='Link to Logo'),
+            model_name="department",
+            name="logo_url",
+            field=models.CharField(
+                blank=True, max_length=200, null=True, verbose_name="Link to Logo"
+            ),
         ),
         migrations.AddField(
-            model_name='department',
-            name='president_signature_url',
-            field=models.CharField(blank=True, max_length=200, null=True, verbose_name='Link to President Signature'),
+            model_name="department",
+            name="president_signature_url",
+            field=models.CharField(
+                blank=True,
+                max_length=200,
+                null=True,
+                verbose_name="Link to President Signature",
+            ),
         ),
         migrations.AddField(
-            model_name='department',
-            name='secretary_signature_url',
-            field=models.CharField(blank=True, max_length=200, null=True, verbose_name='Link to Financial Secretary Signature'),
+            model_name="department",
+            name="secretary_signature_url",
+            field=models.CharField(
+                blank=True,
+                max_length=200,
+                null=True,
+                verbose_name="Link to Financial Secretary Signature",
+            ),
         ),
     ]

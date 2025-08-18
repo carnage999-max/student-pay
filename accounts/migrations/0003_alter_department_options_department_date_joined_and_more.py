@@ -7,37 +7,51 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0002_alter_department_dept_name'),
+        ("accounts", "0002_alter_department_dept_name"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='department',
-            options={'verbose_name': 'user', 'verbose_name_plural': 'users'},
+            name="department",
+            options={"verbose_name": "user", "verbose_name_plural": "users"},
         ),
         migrations.AddField(
-            model_name='department',
-            name='date_joined',
-            field=models.DateTimeField(default=django.utils.timezone.now, verbose_name='date joined'),
+            model_name="department",
+            name="date_joined",
+            field=models.DateTimeField(
+                default=django.utils.timezone.now, verbose_name="date joined"
+            ),
         ),
         migrations.AddField(
-            model_name='department',
-            name='first_name',
-            field=models.CharField(blank=True, max_length=150, verbose_name='first name'),
+            model_name="department",
+            name="first_name",
+            field=models.CharField(
+                blank=True, max_length=150, verbose_name="first name"
+            ),
         ),
         migrations.AddField(
-            model_name='department',
-            name='is_active',
-            field=models.BooleanField(default=True, help_text='Designates whether this user should be treated as active. Unselect this instead of deleting accounts.', verbose_name='active'),
+            model_name="department",
+            name="is_active",
+            field=models.BooleanField(
+                default=True,
+                help_text="Designates whether this user should be treated as active. Unselect this instead of deleting accounts.",
+                verbose_name="active",
+            ),
         ),
         migrations.AddField(
-            model_name='department',
-            name='is_staff',
-            field=models.BooleanField(default=False, help_text='Designates whether the user can log into this admin site.', verbose_name='staff status'),
+            model_name="department",
+            name="is_staff",
+            field=models.BooleanField(
+                default=False,
+                help_text="Designates whether the user can log into this admin site.",
+                verbose_name="staff status",
+            ),
         ),
         migrations.AddField(
-            model_name='department',
-            name='last_name',
-            field=models.CharField(blank=True, max_length=150, verbose_name='last name'),
+            model_name="department",
+            name="last_name",
+            field=models.CharField(
+                blank=True, max_length=150, verbose_name="last name"
+            ),
         ),
     ]

@@ -6,14 +6,14 @@ from rest_framework_nested.routers import NestedDefaultRouter
 
 
 router = DefaultRouter()
-router.register('register', RegisterViewSet, basename='register')
-router.register('login', LoginViewSet, basename='login')
-router.register('department', DepartmentViewSet, basename='department')
+router.register("register", RegisterViewSet, basename="register")
+router.register("login", LoginViewSet, basename="login")
+router.register("department", DepartmentViewSet, basename="department")
 
-department_router = NestedDefaultRouter(router, 'department', lookup='department')
-department_router.register('payment', PaymentViewSet, basename='payments')
+department_router = NestedDefaultRouter(router, "department", lookup="department")
+department_router.register("payment", PaymentViewSet, basename="payments")
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('', include(department_router.urls)),
+    path("", include(router.urls)),
+    path("", include(department_router.urls)),
 ]
