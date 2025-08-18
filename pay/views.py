@@ -105,6 +105,7 @@ class TransactionViewSet(ModelViewSet):
             authorization_url = paystack_obj.initiate_transaction(txn_data)
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        logger.info("Transaction Initiated")
         return Response(
             {"authorization_url": authorization_url}, status=status.HTTP_200_OK
         )
