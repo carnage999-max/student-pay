@@ -5,7 +5,12 @@ from .models import Payment, Transaction
 class PaymentSerializer(ModelSerializer):
     class Meta:
         model = Payment
-        fields = "__all__"
+        fields = ['id', 'payment_for', 'amount_due', 'created_at']
+        read_only_fields = ['id', 'created_at']
+        
+    def create(self, validated_data):
+        department = self.context['request'].user
+        return Payment.objects.create(department=department, **validated_data)
 
 
 class TransactionSerializer(ModelSerializer):

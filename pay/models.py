@@ -10,6 +10,7 @@ class Payment(models.Model):
     amount_due = models.DecimalField(
         _("Amount Expected"), decimal_places=2, max_digits=6
     )
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
 
     def __str__(self):
         return self.payment_for
