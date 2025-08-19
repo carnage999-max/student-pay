@@ -31,7 +31,7 @@ ALLOWED_HOSTS = []
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "https://student-pay-frontend-uk34m.sevalla.app/"
+    "https://student-pay.sevalla.app/"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
