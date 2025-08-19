@@ -1,35 +1,40 @@
+# receipt_utils/create_receipt.py
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-import os, io, requests
+import os
+from pathlib import Path
+import io
+import requests
 
-pdfmetrics.registerFont(TTFont("DejaVuSans", "DejaVuSans.ttf"))
+# Get the directory of the current file
+BASE_DIR = Path(__file__).resolve().parent
+
+# Paths to font and logo files
+FONT_PATH = os.path.join(BASE_DIR, "DejaVuSans.ttf")
+SCHOOL_LOGO_PATH = os.path.join(BASE_DIR, "school_logo.png")
+
+# Validate file existence
+if not os.path.exists(FONT_PATH):
+    raise FileNotFoundError(f"Font file not found at: {FONT_PATH}")
+if not os.path.exists(SCHOOL_LOGO_PATH):
+    raise FileNotFoundError(f"School logo file not found at: {SCHOOL_LOGO_PATH}")
+
+# Register the font
+pdfmetrics.registerFont(TTFont("DejaVuSans", FONT_PATH))
 
 # Receipt size in points (1 inch = 72 points)
 RECEIPT_WIDTH = 6.75 * inch  # 486 pt
 RECEIPT_HEIGHT = 3.375 * inch  # 243 pt
 RECEIPT_SIZE = (RECEIPT_WIDTH, RECEIPT_HEIGHT)
 
-# === Static path to school logo ===
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-SCHOOL_LOGO_PATH = os.path.join(
-    SCRIPT_DIR, "school_logo.png"
-)  # ← ensure this file exists
-
 
 def load_image(source) -> ImageReader | None:
     """
-    This function loads an image from a given source, either a URL or a local file path, and returns an
+    Loads an image from a given source, either a URL or a local file path, and returns an
     ImageReader object if successful.
-
-    :param source: The `load_image` function takes a `source` parameter, which should be a string
-    representing the location of an image file. The function attempts to load the image from the
-    specified source, whether it is a URL (starting with "http://" or "https://") or a local file path
-    :return: The function `load_image` returns an `ImageReader` object if the image is successfully
-    loaded from the specified source (either a URL or a local file path). If there is an error during
-    the loading process, it returns `None`.
     """
     if not isinstance(source, str) or not source.strip():
         return None
@@ -47,14 +52,7 @@ def load_image(source) -> ImageReader | None:
 
 def generate_receipt(data: dict) -> io.BytesIO:
     """
-    The function `generate_receipt` creates a PDF receipt with logos, header, body information,
-    signatures, and an amount box.
-
-    :param data: The `data` parameter in the `generate_receipt` function is a dictionary containing
-    information needed to generate a receipt. The dictionary should have the following keys:
-    :type data: dict
-    :return: The function `generate_receipt` returns an `io.BytesIO` object containing the generated
-    receipt in PDF format.
+    Creates a PDF receipt with logos, header, body information, signatures, and an amount box.
     """
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=RECEIPT_SIZE)
