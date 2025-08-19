@@ -1,2 +1,2 @@
 [start]
-cmd = "python manage.py migrate && gunicorn core.wsgi:application --bind 0.0.0.0:$PORT"
+cmd = "python manage.py migrate && gunicorn student_pay.wsgi:application --bind 0.0.0.0:$PORT"
