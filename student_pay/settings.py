@@ -30,8 +30,7 @@ DEBUG = config("DEBUG", default=True, cast=bool)
 
 ALLOWED_HOSTS = [
     "localhost",
-    #"edb0789a9b64.ngrok-free.app",
-    "haddock-prime-surely.ngrok-free.app"
+    "student-pay-backend.sevalla.app"
 ]
 
 CORS_ALLOWED_ORIGINS = ["https://student-pay.sevalla.app", "http://localhost:3000"]
