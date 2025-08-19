@@ -14,10 +14,10 @@ from accounts.models import Department
 from accounts.utils import get_bank_codes
 from .serializers import PaymentSerializer, TransactionSerializer
 from decouple import config
-import requests
 from num2words import num2words
 from receipt_utils.create_receipt import generate_receipt
 from supabase_util import supabase
+from receipt_utils.upload_receipt import upload_receipt
 import logging
 
 
@@ -168,37 +168,12 @@ class TransactionViewSet(ModelViewSet):
                 pdf_stream = generate_receipt(data=receipt_data)
                 pdf_stream.seek(0)
 
-                try:
-                    # Use requests to upload the file directly from memory
-                    headers = {
-                        "apikey": config("SUPABASE_KEY"),
-                        "Authorization": f"Bearer {config('SUPABASE_KEY')}",
-                        "Content-Type": "application/pdf",
-                        "x-upsert": "true",
-                    }
-                    url = f"{config('SUPABASE_URL')}/storage/v1/object/receipts/{filename}"
-
-                    response = requests.post(
-                        url, headers=headers, data=pdf_stream.read()
-                    )
-                    response.raise_for_status()  # Raises an HTTPError for bad responses (4xx or 5xx)
-
-                    print(f"Successfully uploaded {filename} to Supabase.")
-
-                except requests.exceptions.RequestException as e:
-                    if e.response is not None:
-                        print(f"Response status: {e.response.status_code}")
-                        print(f"Response text: {e.response.text}")
-                    raise
-
-                receipt_url = supabase.storage.from_("receipts").get_public_url(
-                    filename
-                )
+                receipt_url = upload_receipt(filename, pdf_stream)
                 transaction.receipt_url = receipt_url
                 transaction.save()
                 return Response({"receipt_url": receipt_url}, status=status.HTTP_200_OK)
             except Exception as e:
-                print("Exception in receipt generation/upload:", str(e))
+                logger.error("Exception in receipt generation/upload:", str(e))
                 return Response(
                     {
                         "error": "Problem encountered creating receipt",
@@ -252,3 +227,49 @@ def get_banks(request):
         for bank_name, bank_code in get_bank_codes().items()
     ]
     return JsonResponse(banks, safe=False)
+
+@api_view(["GET"])
+def generate_receipt_with_reference(request):
+    reference = request.query_params.get("reference")
+    transaction = Transaction.objects.filter(txn_reference=reference).first()
+    if transaction:
+        receipt_data = {
+            "header": transaction.department.dept_name.upper(),
+            "date": transaction.created_at.strftime("%Y-%m-%d"),
+            "received_from": transaction.received_from,
+            "payment_for": transaction.payment.payment_for,
+            "amount_words": num2words(
+                transaction.amount_paid * 100, to="currency", lang="en_NG"
+            ),
+            "amount": transaction.amount_paid,
+            "department_logo": transaction.department.logo_url,
+            "president_signature": transaction.department.president_signature_url,
+            "financial_signature": transaction.department.secretary_signature_url,
+        }
+        try:
+            pdf_stream = generate_receipt(data=receipt_data)
+            pdf_stream.seek(0)
+            filename = f"{transaction.received_from.replace(' ', '_')}_{transaction.created_at.strftime('%Y-%m-%d')}.pdf"
+            receipt_url = upload_receipt(filename, pdf_stream)
+            transaction.receipt_url = receipt_url
+            transaction.save()
+            logger.info(f"Receipt generated and uploaded: {receipt_url}")
+            if isinstance(receipt_url, dict) and "error" in receipt_url:
+                logger.error(f"Error uploading receipt: {receipt_url['detail']}")
+                return Response(
+                    {
+                        "error": "Error uploading receipt",
+                        "detail": receipt_url["detail"],
+                    },
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+            return JsonResponse({"receipt_url": receipt_url}, status=200)
+        except Exception as e:
+            logger.error("Error generating receipt:", str(e))
+            return Response(
+                {"error": "Error generating receipt", "detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+    return Response(
+        {"message": "Transaction not found"}, status=status.HTTP_404_NOT_FOUND
+    )
