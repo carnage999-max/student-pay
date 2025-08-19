@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.filters import OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django.http import JsonResponse
+from django.conf import settings
 from .filters import TransactionFilter
 from .pagination import CustomResultsSetPagination
 from .paystack import Paystack
@@ -99,7 +100,7 @@ class TransactionViewSet(ModelViewSet):
                 "subaccount": sub_account,
                 "bearer": "subaccount",
                 "metadata": metadata,
-                "callback_url": "http://localhost:3000/payment/pay/success/",
+                "callback_url": "http://localhost:3000/payment/pay/success/" if settings.DEBUG else "https://student-pay.sevalla.app/payment/pay/success/",
             }
             # Initialize Paystack Transaction
             authorization_url = paystack_obj.initiate_transaction(txn_data)

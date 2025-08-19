@@ -23,7 +23,6 @@ hyperframe==6.1.0; python_version >= '3.9'
 idna==3.10; python_version >= '3.6'
 isort==6.0.1; python_full_version >= '3.9.0'
 mccabe==0.7.0; python_version >= '3.6'
-mysqlclient==2.2.7; python_version >= '3.8'
 num2word==1.0.1
 num2words==0.5.14
 numpy==2.3.1; python_version >= '3.11'
