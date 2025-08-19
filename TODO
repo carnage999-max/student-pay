@@ -1,2 +1,0 @@
-Fix ability of unauthenticated users to initialize multiple transactions
-Create generate_receipt endpoint for transaction entries that do not have receipts
