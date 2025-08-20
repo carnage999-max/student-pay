@@ -88,18 +88,6 @@ WSGI_APPLICATION = "student_pay.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-if DEBUG:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.mysql",
-            "NAME": "student_pay_db",
-            "USER": "root",
-            "PASSWORD": config("DB_PASSWORD"),
-            "HOST": "localhost",
-            "PORT": "3306",
-        }
-    }
-    
 tmpPostgres = urlparse(config("DATABASE_URL"))
 
 DATABASES = {
@@ -113,6 +101,18 @@ DATABASES = {
         'OPTIONS': dict(parse_qsl(tmpPostgres.query)),
     }
 }
+
+if DEBUG:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": "student_pay_db",
+            "USER": "root",
+            "PASSWORD": config("DB_PASSWORD"),
+            "HOST": "localhost",
+            "PORT": "3306",
+        }
+    }
 
 
 # Password validation
