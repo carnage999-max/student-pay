@@ -39,4 +39,5 @@ urlpatterns = [
     path("accounts/", include("accounts.urls")),
     path("pay/", include("pay.urls")),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("ping/", ping_site, name="ping_site"),
 ]
