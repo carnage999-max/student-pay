@@ -1,11 +1,12 @@
+import csv
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from rest_framework.filters import OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.conf import settings
 from .filters import TransactionFilter
 from .pagination import CustomResultsSetPagination
@@ -100,7 +101,11 @@ class TransactionViewSet(ModelViewSet):
                 "subaccount": sub_account,
                 "bearer": "subaccount",
                 "metadata": metadata,
-                "callback_url": "http://localhost:3000/payment/pay/success/" if settings.DEBUG else "https://student-pay.sevalla.app/payment/pay/success/",
+                "callback_url": (
+                    "http://localhost:3000/payment/pay/success/"
+                    if settings.DEBUG
+                    else "https://student-pay.sevalla.app/payment/pay/success/"
+                ),
             }
             # Initialize Paystack Transaction
             authorization_url = paystack_obj.initiate_transaction(txn_data)
@@ -229,6 +234,7 @@ def get_banks(request):
     ]
     return JsonResponse(banks, safe=False)
 
+
 @api_view(["GET"])
 def generate_receipt_with_reference(request):
     reference = request.query_params.get("reference")
@@ -274,3 +280,48 @@ def generate_receipt_with_reference(request):
     return Response(
         {"message": "Transaction not found"}, status=status.HTTP_404_NOT_FOUND
     )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def export_transactions_to_csv(request):
+    """
+    The function exports transactions data from a Django model to a CSV file and allows users to
+    download the CSV file.
+
+    :param request: The code snippet you provided is a Django view function that exports transactions
+    data to a CSV file. It retrieves transaction data from the `Transaction` model and writes it to a
+    CSV file for download
+    :return: The code snippet provided is a Django view function that exports transactions data to a CSV
+    file. When this view function is called with a GET request, it retrieves transaction data from the
+    database, converts it to a CSV format, and returns a CSV file as a response for download.
+    """
+    transactions = Transaction.objects.filter(department=request.user).values(
+        "txn_id",
+        "status",
+        "amount_paid",
+        "txn_reference",
+        "payment__payment_for",
+        "department__dept_name",
+        "received_from",
+        "first_name",
+        "last_name",
+        "customer_email",
+        "created_at",
+    )
+    print(transactions)
+
+    if not transactions:
+        return Response(
+            {"message": "No transactions found"}, status=status.HTTP_404_NOT_FOUND
+        )
+
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="transactions.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(transactions[0].keys())
+    for transaction in transactions:
+        writer.writerow(transaction.values()) 
+
+    return response
