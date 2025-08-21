@@ -18,6 +18,20 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
+from django.http import HttpResponse, HttpResponseForbidden
+import logging
+import os
+
+
+logger = logging.getLogger(__name__)
+
+
+def ping_site(request):
+    if request.headers.get("X-Cron-Token") != os.getenv("CRON_SECRET_TOKEN"):
+        logger.warning(f"Unauthorized ping attempt from {request.META.get('REMOTE_ADDR')}")
+        return HttpResponseForbidden("Forbidden")
+    logger.info("Ping successful")
+    return HttpResponse("Hello World")
 
 
 urlpatterns = [
