@@ -1,17 +1,19 @@
 import threading
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, get_connection
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from django.conf import settings
 
 
 def _send_mail(to_email, context, pdf_file, filename):
     subject = f"Payment Receipt - {context.get('payment_for', '')}"
-    from_email = "noreply@yourdomain.com"
+    from_email = settings.DEFAULT_FROM_EMAIL
 
     html_content = render_to_string("receipt_email.html", context)
     text_content = strip_tags(html_content)
 
-    msg = EmailMultiAlternatives(subject, text_content, from_email, [to_email])
+    connection = get_connection(fail_silently=False)
+    msg = EmailMultiAlternatives(subject, text_content, from_email, [to_email], connection=connection)
     msg.attach_alternative(html_content, "text/html")
 
     if pdf_file:
