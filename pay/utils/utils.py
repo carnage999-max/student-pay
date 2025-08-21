@@ -29,9 +29,8 @@ def send_receipt_email(to_email, context, pdf_file, filename="receipt.pdf"):
     html_content = render_to_string("receipt_email.html", context)
     text_content = strip_tags(html_content)
 
-    connection = get_connection(fail_silently=False)
     msg = EmailMultiAlternatives(
-        subject, text_content, from_email, [to_email], connection=connection
+        subject, text_content, from_email, [to_email]
     )
     msg.attach_alternative(html_content, "text/html")
 
