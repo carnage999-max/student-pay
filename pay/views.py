@@ -8,6 +8,8 @@ from rest_framework.filters import OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django.http import HttpResponse, JsonResponse
 from django.conf import settings
+
+from pay.utils.utils import send_receipt_email
 from .filters import TransactionFilter
 from .pagination import CustomResultsSetPagination
 from .paystack import Paystack
@@ -124,6 +126,15 @@ class TransactionViewSet(ModelViewSet):
         permission_classes=[AllowAny],
     )
     def transaction_verify(self, request):
+        """
+        The `transaction_verify` function verifies a transaction, generates a receipt, and uploads it.
+
+        :param request: The `transaction_verify` method is used to verify a transaction based on the
+        provided `request` object. The `request` object contains query parameters that include a
+        transaction reference (`trxref`)
+        :return: The `transaction_verify` method returns a Response object containing either a receipt URL
+        or an error message based on the outcome of the transaction verification process.
+        """
         reference = request.query_params.get("trxref")
         txn = Transaction.objects.filter(txn_reference=reference)
         if txn.exists():
@@ -154,7 +165,6 @@ class TransactionViewSet(ModelViewSet):
                 "president_signature": department.president_signature_url,
                 "financial_signature": department.secretary_signature_url,
             }
-            print(receipt_data)
             transaction = Transaction.objects.create(
                 txn_id=transaction_data["txn_id"],
                 status=transaction_data["txn_status"],
@@ -175,6 +185,33 @@ class TransactionViewSet(ModelViewSet):
                 pdf_stream.seek(0)
 
                 receipt_url = upload_receipt(filename, pdf_stream)
+                email_context = {
+                    "header": receipt_data["header"],
+                    "date": receipt_data["date"],
+                    "received_from": receipt_data["received_from"],
+                    "payment_for": receipt_data["payment_for"],
+                    "amount": receipt_data["amount"],
+                }
+                try:
+                    send_receipt_email(
+                        to_email=transaction_data["customer_email"],
+                        context=email_context,
+                        pdf_file=pdf_stream,
+                        filename=filename,
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to trigger email thread: {str(e)}")
+                if isinstance(receipt_url, dict) and "error" in receipt_url:
+                    logger.error(f"Error uploading receipt: {receipt_url['detail']}")
+                    return Response(
+                        {
+                            "error": "Error uploading receipt",
+                            "detail": receipt_url["detail"],
+                        },
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    )
+                logger.info(f"Receipt generated and uploaded: {receipt_url}")
+                # Send Receipt URL to user's email
                 transaction.receipt_url = receipt_url
                 transaction.save()
                 return Response({"receipt_url": receipt_url}, status=status.HTTP_200_OK)
@@ -309,7 +346,6 @@ def export_transactions_to_csv(request):
         "customer_email",
         "created_at",
     )
-    print(transactions)
 
     if not transactions:
         return Response(
@@ -322,6 +358,6 @@ def export_transactions_to_csv(request):
     writer = csv.writer(response)
     writer.writerow(transactions[0].keys())
     for transaction in transactions:
-        writer.writerow(transaction.values()) 
+        writer.writerow(transaction.values())
 
     return response
