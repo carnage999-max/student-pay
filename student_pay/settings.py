@@ -199,5 +199,5 @@ EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL")
 
 CRONJOBS = [
-    ('*/14 * * * *', 'student_pay.urls.ping_site')
+    ('*/14 * * * *', 'student_pay.cron.keep_alive')
 ]
