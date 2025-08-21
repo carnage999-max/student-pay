@@ -32,11 +32,6 @@ ALLOWED_HOSTS = [
     "localhost",
     "student-pay-backend.sevalla.app",
     "student-pay-backend.onrender.com",
-    "116.203.134.67",
-    "116.203.129.16",
-    "23.88.105.37",
-    "128.140.8.200",
-    "91.99.23.109",
 ]
 
 CORS_ALLOWED_ORIGINS = ["https://student-pay.sevalla.app", "http://localhost:3000"]
