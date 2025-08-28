@@ -29,20 +29,23 @@ class RegisterViewSet(ModelViewSet):
     queryset = Department.objects.all()
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        refresh = RefreshToken.for_user(serializer.instance)
-        return Response(
-            {
-                "access_token": str(refresh.access_token),
-                "refresh_token": str(refresh),
-                "department_id": serializer.instance.id,
-            },
-            status=status.HTTP_200_OK,
-            headers=headers,
-        )
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            refresh = RefreshToken.for_user(serializer.instance)
+            return Response(
+                {
+                    "access_token": str(refresh.access_token),
+                    "refresh_token": str(refresh),
+                    "department_id": serializer.instance.id,
+                },
+                status=status.HTTP_201_CREATED,
+                headers=headers,
+            )
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LoginViewSet(ModelViewSet):

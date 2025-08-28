@@ -25,6 +25,9 @@ gunicorn = "*"
 whitenoise = "*"
 mailjet-rest = "*"
 django-crontab = "*"
+drf-spectacular = "*"
+faker = "*"
+factory-boy = "*"
 
 [dev-packages]
 

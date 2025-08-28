@@ -274,6 +274,17 @@ def get_banks(request):
 
 @api_view(["GET"])
 def generate_receipt_with_reference(request):
+    """
+    This function generates a receipt with reference information for a transaction and uploads it as a
+    PDF file.
+    
+    :param request: The code snippet you provided is a Django view function that generates a receipt for
+    a transaction based on a provided reference. Here's a breakdown of the code:
+    :return: The code snippet returns a JSON response containing the URL of the generated receipt if the
+    transaction with the provided reference exists. If the transaction is found, it generates receipt
+    data, creates a PDF receipt, uploads it, updates the transaction with the receipt URL, and returns
+    the receipt URL in the JSON response.
+    """
     reference = request.query_params.get("reference")
     transaction = Transaction.objects.filter(txn_reference=reference).first()
     if transaction:
