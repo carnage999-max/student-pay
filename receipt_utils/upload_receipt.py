@@ -1,4 +1,4 @@
-from supabase_util import supabase
+from utils.supabase_util import supabase
 from decouple import config
 import logging
 import requests

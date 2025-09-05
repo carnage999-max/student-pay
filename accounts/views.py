@@ -3,19 +3,18 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.decorators import action
 from .models import Department
 from .serializers import (
     RegisterDepartmentSerializer,
     LoginSerializer,
     DepartmentSerializer,
 )
+from utils.permissions import isVerifiedUser
 from django.contrib.auth import authenticate
 from .utils import get_specific_bank_code, resolve_account_number
 from decouple import config
 import requests
-from io import BytesIO
-from supabase_util import supabase
+from utils.supabase_util import supabase
 
 
 class RegisterViewSet(ModelViewSet):
@@ -86,11 +85,12 @@ class DepartmentViewSet(ModelViewSet):
 
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [isVerifiedUser]
+    http_method_names = ['get', 'put', 'patch']
 
     def get_permissions(self):
         if self.action in ["delete", "update", "partial_update"]:
-            permission_classes = [IsAuthenticated]
+            permission_classes = [IsAuthenticated, isVerifiedUser]
         else:
             permission_classes = [AllowAny]
         return [permission() for permission in permission_classes]

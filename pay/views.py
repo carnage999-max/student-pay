@@ -9,9 +9,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.http import HttpResponse, JsonResponse
 from django.conf import settings
 
-from pay.utils.utils import send_receipt_email
+from pay.utils import send_receipt_email
+from utils.fetchReceiptData import getReceiptData
 from .filters import TransactionFilter
-from .pagination import CustomResultsSetPagination
+from utils.pagination import CustomResultsSetPagination
 from .paystack import Paystack
 from .models import Payment, Transaction
 from accounts.models import Department
@@ -20,7 +21,7 @@ from .serializers import PaymentSerializer, TransactionSerializer
 from decouple import config
 from num2words import num2words
 from receipt_utils.create_receipt import generate_receipt
-from supabase_util import supabase
+from utils.supabase_util import supabase
 from receipt_utils.upload_receipt import upload_receipt
 import logging
 
@@ -104,7 +105,7 @@ class TransactionViewSet(ModelViewSet):
                 "bearer": "subaccount",
                 "metadata": metadata,
                 "callback_url": (
-                    "http://localhost:3000/payment/pay/success/"
+                    "http://localhost:8000/pay/pay/verify/"
                     if settings.DEBUG
                     else "https://student-pay.sevalla.app/payment/pay/success/"
                 ),
@@ -137,64 +138,42 @@ class TransactionViewSet(ModelViewSet):
         """
         reference = request.query_params.get("trxref")
         txn = Transaction.objects.filter(txn_reference=reference)
+        receipt_data = getReceiptData(reference)
+        filename = f"{receipt_data['receipt_data']['received_from'].replace(' ', '_')}_{receipt_data['receipt_data']['date']}.pdf"
+        if "error" in receipt_data:
+            logger.error(f"Error verifying Transaction")
+            return Response(
+                {
+                    "error": "Error Verifying Transaction",
+                    "detail": receipt_data["error"],
+                }
+            )
         if txn.exists():
             return Response(
                 {"receipt_url": self.get_serializer(txn.first()).data["receipt_url"]},
                 status=status.HTTP_200_OK,
             )
         else:
-            paystack_obj = Paystack()
-            transaction_data = paystack_obj.verify_transaction(reference)
-            if "error" in transaction_data:
-                return Response(
-                    {"error": transaction_data["error"]},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            payment = Payment.objects.get(id=transaction_data["payment_id"])
-            department = Department.objects.get(id=transaction_data["department_id"])
-            receipt_data = {
-                "header": department.dept_name.upper(),
-                "date": transaction_data["date_paid"],
-                "received_from": transaction_data["received_from"],
-                "payment_for": payment.payment_for,
-                "amount_words": num2words(
-                    transaction_data["amount_paid"] * 100, to="currency", lang="en_NG"
-                ),
-                "amount": transaction_data["amount_paid"],
-                "department_logo": department.logo_url,
-                "president_signature": department.president_signature_url,
-                "financial_signature": department.secretary_signature_url,
-            }
-            transaction = Transaction.objects.create(
-                txn_id=transaction_data["txn_id"],
-                status=transaction_data["txn_status"],
-                amount_paid=transaction_data["amount_paid"],
-                ip_address=transaction_data["ip_address"],
-                txn_reference=transaction_data["txn_reference"],
-                customer_code=transaction_data["customer_code"],
-                payment=payment,
-                department=department,
-                received_from=transaction_data["received_from"],
-                first_name=transaction_data["first_name"],
-                last_name=transaction_data["last_name"],
-                customer_email=transaction_data["customer_email"],
-            )
-            filename = f"{transaction_data['received_from'].replace(' ', '_')}_{transaction_data['date_paid']}.pdf"
+            # Verify transaction and get data for saving to db and for creating receipt
+
+            transaction = Transaction.objects.create(**receipt_data["save_data"])
             try:
-                pdf_stream = generate_receipt(data=receipt_data)
+                # Receipt generation logic and error handling
+                pdf_stream = generate_receipt(data=receipt_data["receipt_data"])
                 pdf_stream.seek(0)
 
                 receipt_url = upload_receipt(filename, pdf_stream)
                 email_context = {
-                    "header": receipt_data["header"],
-                    "date": receipt_data["date"],
-                    "received_from": receipt_data["received_from"],
-                    "payment_for": receipt_data["payment_for"],
-                    "amount": receipt_data["amount"],
+                    "header": receipt_data["receipt_data"]["header"],
+                    "date": receipt_data["receipt_data"]["date"],
+                    "received_from": receipt_data["receipt_data"]["received_from"],
+                    "payment_for": receipt_data["receipt_data"]["payment_for"],
+                    "amount": receipt_data["receipt_data"]["amount"],
                 }
                 try:
+                    # sending receipt to customer email
                     send_receipt_email(
-                        to_email=transaction_data["customer_email"],
+                        to_email=receipt_data["save_data"]["customer_email"],
                         context=email_context,
                         pdf_file=pdf_stream,
                         filename=filename,
@@ -211,7 +190,6 @@ class TransactionViewSet(ModelViewSet):
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     )
                 logger.info(f"Receipt generated and uploaded: {receipt_url}")
-                # Send Receipt URL to user's email
                 transaction.receipt_url = receipt_url
                 transaction.save()
                 return Response({"receipt_url": receipt_url}, status=status.HTTP_200_OK)
@@ -277,7 +255,7 @@ def generate_receipt_with_reference(request):
     """
     This function generates a receipt with reference information for a transaction and uploads it as a
     PDF file.
-    
+
     :param request: The code snippet you provided is a Django view function that generates a receipt for
     a transaction based on a provided reference. Here's a breakdown of the code:
     :return: The code snippet returns a JSON response containing the URL of the generated receipt if the

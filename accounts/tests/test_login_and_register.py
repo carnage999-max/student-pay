@@ -2,7 +2,7 @@ import logging
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
-from factories import DepartmentFactory
+from utils.factories import DepartmentFactory
 from .test_ini import BaseUserTestCase
 
 

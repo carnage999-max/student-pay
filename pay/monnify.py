@@ -29,7 +29,7 @@ txn_data = {
     "amount": 6000,
     "customerName": "Stephen Ikooohane",
     "customerEmail": "stephen@lopoikhane.com",
-    "paymentReference": "Food 1011011",
+    "paymentReference": "Food 91010001011",
     "paymentDescription": "Trial transactionizationaticalous",
 }
 
@@ -114,8 +114,8 @@ subacc_dta = [
 	{
 		"bankCode": "090272",
 		"accountNumber": "1100020577",
-		"email": "ezekielokebule@gmail.com",
+		"email": "test@gmail.com",
 		"defaultSplitPercentage": 94.7
 	}
 ]
-pprint(p.createSubAccount(subacc_dta))
+pprint(p.initializeTransaction(txn_data))
