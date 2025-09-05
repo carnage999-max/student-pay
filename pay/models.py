@@ -32,27 +32,19 @@ class Transaction(models.Model):
     status = models.CharField(
         _("Transaction Status"), max_length=20, null=True, blank=True
     )
-    customer_code = models.CharField(
-        _("Customer Code"), max_length=20, default="XXXXXXXXXXXXXX"
-    )
-    first_name = models.CharField(
-        _("First Name"), max_length=20, default="XXXXXXXXXXXXXX"
-    )
-    last_name = models.CharField(
-        _("Last Name"), max_length=20, default="XXXXXXXXXXXXXX"
-    )
+    customer_code = models.CharField(_("Customer Code"), max_length=20, null=True)
+    first_name = models.CharField(_("First Name"), max_length=20, null=True)
+    last_name = models.CharField(_("Last Name"), max_length=20, null=True)
     customer_email = models.EmailField(
         _("Customer E-mail"), default="customer@email.com"
     )
-    received_from = models.CharField(
-        _("Received From"), max_length=50, default="XXXXXXXXXXXXXX"
-    )
-    ip_address = models.CharField(_("IP Address"), max_length=20, default="XXXXXXXXXXX")
+    received_from = models.CharField(_("Received From"), max_length=50)
+    ip_address = models.CharField(_("IP Address"), max_length=20, null=True)
     txn_reference = models.CharField(
-        _("Transaction Reference"), max_length=15, default="XXXXXXXXXXXXX"
+        _("Transaction Reference"), max_length=15, db_index=True
     )
     receipt_url = models.CharField(
-        _("Receipt URL"), max_length=200, default="XXXXXXXXXXXXX", null=True, blank=True
+        _("Receipt URL"), max_length=200, null=True, blank=True
     )
 
     def __str__(self):

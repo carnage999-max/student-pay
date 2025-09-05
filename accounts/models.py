@@ -60,6 +60,7 @@ class Department(AbstractUser):
         null=True,
         blank=True,
     )
+    is_verified = models.BooleanField(_("Verification Status"), default=False)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

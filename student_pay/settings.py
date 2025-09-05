@@ -173,10 +173,11 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    # 'EXCEPTION_HANDLER': 'utils.exception_handler.custom_exception_handler'
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=1000),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "UPDATE_LAST_LOGIN": True,
 }
