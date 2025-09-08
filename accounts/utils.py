@@ -20,3 +20,11 @@ def resolve_account_number(account_number, bank_code):
     }
     response = requests.get(url=f"https://api.paystack.co/bank/resolve?account_number={account_number}&bank_code={bank_code}", headers=header)
     return response.json()['data']['account_name']
+
+
+def get_banks():
+    banks = [
+        {"name": bank_name, "code": bank_code}
+        for bank_name, bank_code in get_bank_codes().items()
+    ]
+    return banks

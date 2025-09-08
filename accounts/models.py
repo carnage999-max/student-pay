@@ -43,10 +43,17 @@ class Department(AbstractUser):
     bank_name = models.CharField(max_length=50, default="Bank Name")
     bank_code = models.CharField(max_length=10, default="000")
     account_name = models.CharField(
-        _("Account Name"), max_length=200, default="XXXXXXXXXX"
+        _("Bank Account Name"), max_length=200, default="XXXXXXXXXX"
     )
     sub_account_code = models.CharField(
-        _("Sub Account"), max_length=20, default="XXXXXXXXXXXX"
+        _("Sub Account Code"), max_length=20, default="XXXXXXXXXXXX"
+    )
+    logo = models.ImageField(upload_to="temp_uploads/", null=True, blank=True)
+    president_signature = models.ImageField(
+        upload_to="temp_uploads/", null=True, blank=True
+    )
+    secretary_signature = models.ImageField(
+        upload_to="temp_uploads/", null=True, blank=True
     )
     logo_url = models.CharField(
         _("Link to Logo"), max_length=200, null=True, blank=True
@@ -61,6 +68,8 @@ class Department(AbstractUser):
         blank=True,
     )
     is_verified = models.BooleanField(_("Verification Status"), default=False)
+    created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Last updated"), auto_now=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -69,3 +78,8 @@ class Department(AbstractUser):
         return self.dept_name
 
     objects = CustomUserManager()
+
+    class Meta:
+        verbose_name = "Department"
+        verbose_name_plural = "Departments"
+        ordering = ["created_at"]

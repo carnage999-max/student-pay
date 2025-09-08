@@ -38,3 +38,25 @@ def send_receipt_email(to_email, context, pdf_file, filename="receipt.pdf"):
         msg.attach(filename, pdf_file.getvalue(), "application/pdf")
 
     msg.send()
+    
+    
+def send_welcome_mail(to_email):
+    """
+    The function `send_welcome_mail` sends a welcome email to a specified email address using a
+    predefined HTML template.
+    
+    :param to_email: The `to_email` parameter is the email address where you want to send the welcome
+    email. It should be a string representing a valid email address.
+    """
+    subject = "Welcome to Student Pay"
+    from_email = settings.DEFAULT_FROM_EMAIL
+
+    html_content = render_to_string("welcome_email.html")
+    text_content = strip_tags(html_content)
+
+    msg = EmailMultiAlternatives(
+        subject, text_content, from_email, [to_email]
+    )
+    msg.attach_alternative(html_content, "text/html")
+
+    msg.send()

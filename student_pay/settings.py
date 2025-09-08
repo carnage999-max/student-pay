@@ -42,6 +42,7 @@ CORS_ALLOW_CREDENTIALS = True
 # Application definition
 
 INSTALLED_APPS = [
+    "jazzmin",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -156,9 +157,14 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [
     BASE_DIR / "receipt_utils",
+    BASE_DIR / "static",
 ]
 
 COLLECTSTATIC = config("COLLECTSTATIC", default="true", cast=bool)
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -199,6 +205,63 @@ EMAIL_HOST_USER = config("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL")
 
+MAILJET_SENDER_EMAIL = config("MAILJET_SENDER_EMAIL")
+
 CRONJOBS = [
     ('*/14 * * * *', 'student_pay.cron.keep_alive')
 ]
+
+JAZZMIN_SETTINGS = {
+    "site_title": "Student Pay Admin",
+    "site_header": "Student Pay Admin",
+    "site_brand": "Student Pay",
+    "site_logo": "images/student-pay-logo.jpg",
+    "site_icon": "icons/favicon.ico",
+    "welcome_sign": "Welcome to Student Pay",
+    "hide_apps": ['auth'],
+    "topmenu_links": [
+        {"name": "Home",  "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"model": "accounts.Department"},
+        {"model": "pay.Transaction"},
+    ],
+    "copyright": "StudentPay",
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "accounts.Department": "fas fa-user",
+        "pay.Transaction": "fas fa-money-check",
+        "pay.Payment": "fas fa-file-invoice",
+        "admin.LogEntry": "fas fa-file",
+    },
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-success",
+    "accent": "accent-teal",
+    "navbar": "navbar-dark",
+    "no_navbar_border": False,
+    "navbar_fixed": False,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": False,
+    "sidebar": "sidebar-dark-info",
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": False,
+    "sidebar_nav_compact_style": False,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "theme": "lux",
+    "dark_mode_theme": None,
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success",
+    },
+}

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account Application Update - Student Payment Platform</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f4f4f4;
+      }
+
+      .email-container {
+        max-width: 600px;
+        margin: 20px auto;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 30px 20px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 28px;
+        margin-bottom: 10px;
+        font-weight: 600;
+      }
+
+      .header p {
+        font-size: 16px;
+        opacity: 0.9;
+      }
+
+      .content {
+        padding: 30px 20px;
+      }
+
+      .status-section {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .status-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        position: relative;
+      }
+
+      .status-icon::before {
+        content: "✕";
+        font-size: 40px;
+        color: white;
+        font-weight: bold;
+      }
+
+      .status-section h2 {
+        color: #dc2626;
+        font-size: 24px;
+        margin-bottom: 15px;
+        font-weight: 600;
+      }
+
+      .status-section p {
+        font-size: 16px;
+        color: #666;
+        margin-bottom: 20px;
+      }
+
+      .application-details {
+        background: linear-gradient(145deg, #fef2f2 0%, #fee2e2 100%);
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 25px;
+        margin: 25px 0;
+      }
+
+      .application-details h3 {
+        color: #991b1b;
+        font-size: 20px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+      }
+
+      .application-details h3:before {
+        content: "📋";
+        margin-right: 10px;
+        font-size: 20px;
+      }
+
+      .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #fecaca;
+      }
+
+      .detail-row:last-child {
+        border-bottom: none;
+      }
+
+      .detail-label {
+        font-weight: 600;
+        color: #7f1d1d;
+        font-size: 14px;
+      }
+
+      .detail-value {
+        color: #991b1b;
+        font-weight: 500;
+        text-align: right;
+        max-width: 60%;
+        word-wrap: break-word;
+      }
+
+      .rejection-reasons {
+        background: white;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 25px;
+        margin: 25px 0;
+        box-shadow: 0 1px 3px rgba(248, 113, 113, 0.1);
+      }
+
+      .rejection-reasons h3 {
+        color: #991b1b;
+        font-size: 20px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+      }
+
+      .rejection-reasons h3:before {
+        content: "⚠️";
+        margin-right: 10px;
+        font-size: 20px;
+      }
+
+      .reason-item {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 15px;
+        padding: 15px;
+        background: linear-gradient(
+          145deg,
+          #fef2f2 0%,
+          #fee2e2 20%,
+          #fef2f2 100%
+        );
+        border-radius: 6px;
+        border-left: 4px solid #f87171;
+      }
+
+      .reason-bullet {
+        background-color: #dc2626;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: bold;
+        margin-right: 15px;
+        flex-shrink: 0;
+      }
+
+      .reason-bullet::before {
+        content: "!";
+      }
+
+      .reason-content {
+        color: #7f1d1d;
+        font-size: 14px;
+      }
+
+      .reapply-section {
+        background: linear-gradient(145deg, #f0fdf4 0%, #ecfdf5 100%);
+        border: 1px solid #a7f3d0;
+        border-radius: 8px;
+        padding: 25px;
+        margin: 25px 0;
+        box-shadow: 0 1px 3px rgba(16, 185, 129, 0.1);
+      }
+
+      .reapply-section h3 {
+        color: #065f46;
+        font-size: 20px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+      }
+
+      .reapply-section h3:before {
+        content: "🔄";
+        margin-right: 10px;
+        font-size: 20px;
+      }
+
+      .next-step {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 20px;
+        padding: 15px;
+        background: white;
+        border-radius: 6px;
+        border: 1px solid #a7f3d0;
+      }
+
+      .step-number {
+        background-color: #10b981;
+        color: white;
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: bold;
+        margin-right: 15px;
+        flex-shrink: 0;
+      }
+
+      .step-content h4 {
+        color: #064e3b;
+        font-size: 16px;
+        margin-bottom: 8px;
+      }
+
+      .step-content p {
+        color: #047857;
+        font-size: 14px;
+        margin: 0;
+      }
+
+      .reapply-button {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 15px 30px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 16px;
+        text-decoration: none;
+        display: inline-block;
+        margin: 20px auto;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        text-align: center;
+        min-width: 200px;
+      }
+
+      .reapply-button:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+      }
+
+      .button-container {
+        text-align: center;
+        margin: 30px 0;
+      }
+
+      .important-note {
+        background: linear-gradient(
+          145deg,
+          #fefce8 0%,
+          #fef3c7 50%,
+          #fefce8 100%
+        );
+        border: 1px solid #f59e0b;
+        border-radius: 6px;
+        padding: 15px;
+        margin: 20px 0;
+      }
+
+      .important-note h4 {
+        color: #92400e;
+        margin-bottom: 8px;
+        font-size: 16px;
+      }
+
+      .important-note p {
+        color: #78350f;
+        margin: 0;
+      }
+
+      .contact-section {
+        background: white;
+        border: 1px solid #a7f3d0;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+      }
+
+      .contact-section h4 {
+        color: #064e3b;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+      }
+
+      .contact-section h4:before {
+        content: "💬";
+        margin-right: 10px;
+        font-size: 18px;
+      }
+
+      .contact-info {
+        color: #047857;
+        margin: 8px 0;
+      }
+
+      .contact-info a {
+        color: #10b981;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .contact-info a:hover {
+        text-decoration: underline;
+      }
+
+      .footer {
+        background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+        color: #d1fae5;
+        text-align: center;
+        padding: 25px 20px;
+      }
+
+      .footer p {
+        margin: 5px 0;
+      }
+
+      .footer a {
+        color: #6ee7b7;
+        text-decoration: none;
+      }
+
+      .footer a:hover {
+        color: #a7f3d0;
+        text-decoration: underline;
+      }
+
+      @media (max-width: 600px) {
+        .email-container {
+          margin: 10px;
+          border-radius: 0;
+        }
+
+        .content {
+          padding: 20px 15px;
+        }
+
+        .header {
+          padding: 20px 15px;
+        }
+
+        .header h1 {
+          font-size: 24px;
+        }
+
+        .detail-row {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 5px;
+        }
+
+        .detail-value {
+          max-width: 100%;
+          text-align: left;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="email-container">
+      <!-- Header -->
+      <div class="header">
+        <h1>Application Update</h1>
+        <p>Student Payment Platform Account Review</p>
+      </div>
+
+      <!-- Content -->
+      <div class="content">
+        <!-- Status Section -->
+        <div class="status-section">
+          <div class="status-icon"></div>
+          <h2>Application Not Approved</h2>
+          <p>Dear {{ department_name }},</p>
+          <p>
+            Thank you for your interest in joining the Student Payment Platform.
+            After reviewing your application, we were unable to approve your
+            account at this time.
+          </p>
+        </div>
+
+        <!-- Application Details -->
+        <div class="application-details">
+          <h3>Application Summary</h3>
+          <div class="detail-row">
+            <span class="detail-label">Department:</span>
+            <span class="detail-value">{{ department_name }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Submission Date:</span>
+            <span class="detail-value">{{ submission_date }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Review Date:</span>
+            <span class="detail-value">{{ review_date }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Status:</span>
+            <span class="detail-value" style="color: #dc2626; font-weight: 700"
+              >✕ NOT APPROVED</span
+            >
+          </div>
+        </div>
+        </div>
+
+        <!-- Important Note -->
+        <div class="important-note">
+          <h4>📌 Important Information</h4>
+          <p>
+            This decision is not permanent. If you feel this is a mistake, You may engage the support team on WhatsApp or E-mail to rectify the issue and reapply for verification. Our team is committed to
+            helping legitimate student organizations join our platform.
+          </p>
+        </div>
+
+        <!-- Contact Section -->
+        <div class="contact-section">
+          <h4>Need Clarification?</h4>
+          <p style="color: #6b7280; margin-bottom: 15px">
+            If you have questions about this decision or need help preparing
+            your reapplication:
+          </p>
+
+          <div class="contact-info">
+            📧 Email:
+            <a href="mailto:studentpaydesk@proton.me">studentpaydesk@proton.me</a>
+          </div>
+          <div class="contact-info">
+            💬 WhatsApp:
+            <a href="https://wa.me/+2348163899213"
+              >08163899213</a
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <p><strong>Student Payment Platform</strong></p>
+        <p style="margin-top: 15px; font-size: 12px">
+          We appreciate your interest in our platform and encourage you to
+          reapply.
+          <br />Contact us at studentpaydesk@proton.me or WhatsApp +234 816 389
+          9213
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

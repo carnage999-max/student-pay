@@ -9,19 +9,18 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.http import HttpResponse, JsonResponse
 from django.conf import settings
 
-from pay.utils import send_receipt_email
+# from pay.utils import send_receipt_email
 from utils.fetchReceiptData import getReceiptData
 from .filters import TransactionFilter
 from utils.pagination import CustomResultsSetPagination
+from pay.utils import send_receipt_email
 from .paystack import Paystack
 from .models import Payment, Transaction
 from accounts.models import Department
 from accounts.utils import get_bank_codes
 from .serializers import PaymentSerializer, TransactionSerializer
-from decouple import config
 from num2words import num2words
 from receipt_utils.create_receipt import generate_receipt
-from utils.supabase_util import supabase
 from receipt_utils.upload_receipt import upload_receipt
 import logging
 
@@ -163,7 +162,7 @@ class TransactionViewSet(ModelViewSet):
                 pdf_stream.seek(0)
 
                 receipt_url = upload_receipt(filename, pdf_stream)
-                email_context = {
+                context = {
                     "header": receipt_data["receipt_data"]["header"],
                     "date": receipt_data["receipt_data"]["date"],
                     "received_from": receipt_data["receipt_data"]["received_from"],
@@ -174,7 +173,7 @@ class TransactionViewSet(ModelViewSet):
                     # sending receipt to customer email
                     send_receipt_email(
                         to_email=receipt_data["save_data"]["customer_email"],
-                        context=email_context,
+                        context=context,
                         pdf_file=pdf_stream,
                         filename=filename,
                     )

@@ -29,7 +29,7 @@ txn_data = {
     "amount": 6000,
     "customerName": "Stephen Ikooohane",
     "customerEmail": "stephen@lopoikhane.com",
-    "paymentReference": "Food 91010001011",
+    "paymentReference": "Food 9101000100911",
     "paymentDescription": "Trial transactionizationaticalous",
 }
 
