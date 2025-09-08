@@ -2,7 +2,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from .models import Department
 from .serializers import (
     RegisterDepartmentSerializer,
@@ -38,7 +38,7 @@ class RegisterViewSet(ModelViewSet):
                 {
                     "access_token": str(refresh.access_token),
                     "refresh_token": str(refresh),
-                    "department_id": serializer.instance.dept_id,
+                    "department_id": serializer.instance.id,
                 },
                 status=status.HTTP_201_CREATED,
                 headers=headers,
@@ -71,7 +71,7 @@ class LoginViewSet(ModelViewSet):
             {
                 "access_token": str(refresh.access_token),
                 "refresh_token": str(refresh),
-                "department_id": user.dept_id,
+                "department_id": user.id,
             },
             status=status.HTTP_200_OK,
         )
@@ -86,11 +86,13 @@ class DepartmentViewSet(ModelViewSet):
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
     permission_classes = [isVerifiedUser]
-    http_method_names = ['get', 'put', 'patch']
+    http_method_names = ["get", "put", "patch"]
 
     def get_permissions(self):
-        if self.action in ["delete", "update", "partial_update"]:
+        if self.action in ["delete"]:
             permission_classes = [IsAuthenticated, isVerifiedUser]
+        elif self.action in ["update", "partial_update"]:
+            permission_classes = [IsAdminUser]
         else:
             permission_classes = [AllowAny]
         return [permission() for permission in permission_classes]

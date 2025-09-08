@@ -11,9 +11,9 @@ from .models import Department
 class RegisterDepartmentSerializer(ModelSerializer):
     class Meta:
         model = Department
-        fields = ["dept_id", "email", "password", "dept_name"]
+        fields = ["id", "email", "password", "dept_name"]
         extra_kwargs = {"password": {"write_only": True}}
-        read_only_fields = ["dept_id"]
+        read_only_fields = ["id"]
 
     def create(self, validated_data):
         password = validated_data.pop("password")
@@ -42,7 +42,7 @@ class DepartmentSerializer(ModelSerializer):
     class Meta:
         model = Department
         fields = [
-            "dept_id",
+            "id",
             "email",
             "dept_name",
             "account_number",
@@ -56,7 +56,7 @@ class DepartmentSerializer(ModelSerializer):
             "account_name",
         ]
         read_only_fields = [
-            "dept_id",
+            "id",
             "email",
             "logo_url",
             "president_signature_url",

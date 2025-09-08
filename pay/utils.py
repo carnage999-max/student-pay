@@ -78,3 +78,27 @@ def send_approval_email(to_email, context):
     msg.attach_alternative(html_content, "text/html")
 
     msg.send()
+    
+def send_rejection_email(to_email, context):
+    """
+    The function `send_rejection_email` sends a rejection email to a specified email address using a
+    predefined HTML template and context.
+    
+    :param to_email: The `to_email` parameter is the email address where you want to send the rejection
+    email. It should be a string representing a valid email address.
+    :param context: The `context` parameter in the `send_rejection_email` function is a dictionary that
+    contains information related to the rejection process. This context is used to populate the HTML
+    template for the email.
+    """
+    subject = f"Department({context.get('dept_name', '')}) Rejected - Student Pay"
+    from_email = settings.DEFAULT_FROM_EMAIL
+
+    html_content = render_to_string("account_rejected.html", context)
+    text_content = strip_tags(html_content)
+
+    msg = EmailMultiAlternatives(
+        subject, text_content, from_email, [to_email]
+    )
+    msg.attach_alternative(html_content, "text/html")
+
+    msg.send()

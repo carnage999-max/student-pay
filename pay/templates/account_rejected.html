@@ -409,7 +409,7 @@
         <div class="status-section">
           <div class="status-icon"></div>
           <h2>Application Not Approved</h2>
-          <p>Dear {{ department_name }},</p>
+          <p>Dear {{ dept_name }},</p>
           <p>
             Thank you for your interest in joining the Student Payment Platform.
             After reviewing your application, we were unable to approve your
@@ -422,20 +422,20 @@
           <h3>Application Summary</h3>
           <div class="detail-row">
             <span class="detail-label">Department:</span>
-            <span class="detail-value">{{ department_name }}</span>
+            <span class="detail-value" style="text-transform: capitalize;"> {{ dept_name }}</span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">Submission Date:</span>
-            <span class="detail-value">{{ submission_date }}</span>
+            <span class="detail-label">Account ID:</span>
+            <span class="detail-value"> {{ dept_id }}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Review Date:</span>
-            <span class="detail-value">{{ review_date }}</span>
+            <span class="detail-value"> {{ review_date }}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Status:</span>
             <span class="detail-value" style="color: #dc2626; font-weight: 700"
-              >✕ NOT APPROVED</span
+              > ✕ NOT APPROVED</span
             >
           </div>
         </div>

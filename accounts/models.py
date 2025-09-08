@@ -31,7 +31,7 @@ class CustomUserManager(BaseUserManager):
 
 
 class Department(AbstractUser):
-    dept_id = models.UUIDField(_("Department ID"), primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(_("Department ID"), primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(
         _("email address"),
         unique=True,
@@ -86,7 +86,4 @@ class Department(AbstractUser):
         verbose_name_plural = "Departments"
         ordering = ["-updated_at", "-created_at"]
         
-    @property
-    def id(self):
-        return self.dept_id
 

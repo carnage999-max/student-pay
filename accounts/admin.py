@@ -8,7 +8,7 @@ from decouple import config
 from accounts.utils import get_specific_bank_code, resolve_account_number
 from .models import Department
 from .forms import DepartmentAdminForm
-from pay.utils import send_approval_email
+from pay.utils import send_approval_email, send_rejection_email
 from utils.supabase_util import supabase
 
 
@@ -16,7 +16,7 @@ from utils.supabase_util import supabase
 class DepartmentAdmin(admin.ModelAdmin):
     form = DepartmentAdminForm
     list_display = [
-        "dept_id",
+        "id",
         "dept_name",
         "email",
         "is_verified",
@@ -71,12 +71,12 @@ class DepartmentAdmin(admin.ModelAdmin):
         urls = super().get_urls()
         custom_urls = [
             path(
-                "<uuid:dept_id>/approve/",
+                "<uuid:id>/approve/",
                 self.admin_site.admin_view(self.approve_department_view),
                 name="approve_department",
             ),
             path(
-                "<uuid:dept_id>/reject/",
+                "<uuid:id>/reject/",
                 self.admin_site.admin_view(self.reject_department_view),
                 name="reject_department",
             ),
@@ -89,11 +89,14 @@ class DepartmentAdmin(admin.ModelAdmin):
             return
 
         # === Step 1: Resolve account details ===
-        bank_code = get_specific_bank_code(dept.bank_name)
-        account_name = resolve_account_number(dept.account_number, bank_code)
+        try:
+            bank_code = get_specific_bank_code(dept.bank_name)
+            account_name = resolve_account_number(dept.account_number, bank_code)
 
-        dept.bank_code = bank_code
-        dept.account_name = account_name
+            dept.bank_code = bank_code
+            dept.account_name = account_name
+        except requests.HTTPError as e:
+            raise Exception(f"Account resolution failed: {str(e)}")
 
         # === Step 2: Create Paystack subaccount ===
         url = "https://api.paystack.co/subaccount"
@@ -163,10 +166,9 @@ class DepartmentAdmin(admin.ModelAdmin):
         email_context = {
             "dept_name": dept.dept_name,
             "approval_date": dept.updated_at,
-            "account_id": dept.dept_id,
+            "dept_id": dept.id,
             "account_number": dept.account_number,
             "bank_name": dept.bank_name,
-            "sub_account_code": dept.sub_account_code,
         }
         send_approval_email(dept.email, email_context)
         messages.success(
@@ -174,20 +176,30 @@ class DepartmentAdmin(admin.ModelAdmin):
         )
 
     # === Per-row button views ===
-    def approve_department_view(self, request, dept_id):
+    def approve_department_view(self, request, id):
         try:
-            dept = Department.objects.get(pk=dept_id)
+            dept = Department.objects.get(pk=id)
             self._approve_department(request, dept)
+            messages.success(
+            request, f"✅ Department {dept.dept_name} approved successfully."
+        )
 
         except Exception as e:
             messages.error(request, f"❌ Failed to approve department: {str(e)}")
         return self._redirect_back(request)
 
-    def reject_department_view(self, request, dept_id):
+    def reject_department_view(self, request, id):
         try:
-            dept = Department.objects.get(pk=dept_id)
+            dept = Department.objects.get(pk=id)
             dept.is_verified = False
             dept.save()
+            
+            email_context = {
+            "dept_name": dept.dept_name,
+            "review_date": dept.updated_at,
+            "dept_id": dept.id,
+        }
+            send_rejection_email(dept.email, email_context)
             messages.warning(request, f"❌ Department {dept.dept_name} rejected.")
         except Exception as e:
             messages.error(request, f"❌ Failed to reject department: {str(e)}")
