@@ -1,0 +1,17 @@
+/* Hide Jazzmin version info in footer (covers common variants) */
+.main-footer .float-right,
+.main-footer .d-none.d-sm-inline,
+footer .float-right,
+footer .d-none.d-sm-inline,
+.footer .float-right,
+.footer .d-none.d-sm-inline,
+.dj-version,
+.jazzmin-version {
+  display: none !important;
+}
+
+/* Resize Jazzmin login logo */
+.login-logo img {
+  max-width: 180px !important; /* adjust to taste */
+  height: auto !important;
+}

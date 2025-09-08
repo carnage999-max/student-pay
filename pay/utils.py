@@ -11,17 +11,11 @@ def send_receipt_email(to_email, context, pdf_file, filename="receipt.pdf"):
     :param to_email: The `to_email` parameter is the email address where you want to send the receipt
     email
     :param context: The `context` parameter in the `send_receipt_email` function is a dictionary that
-    contains information related to the payment for which the receipt is being sent. It may include
-    details such as the payment amount, date, transaction ID, customer name, and any other relevant
-    information needed to generate the receipt and
+    contains information related to the payment for which the receipt is being sent.
     :param pdf_file: The `pdf_file` parameter in the `send_receipt_email` function is a file object that
-    contains the PDF content of the receipt that you want to attach to the email. This file object
-    should be opened in binary read mode ('rb') before passing it to the function. The function will
-    attach this
+    contains the PDF content of the receipt that you want to attach to the email.
     :param filename: The `filename` parameter in the `send_receipt_email` function is a string that
-    represents the name of the PDF file that will be attached to the email. By default, if no value is
-    provided for `filename`, it will be set to "receipt.pdf". This filename will be used when attaching,
-    defaults to receipt.pdf (optional)
+    represents the name of the PDF file that will be attached to the email.
     """
     subject = f"Payment Receipt - {context.get('payment_for', '')}"
     from_email = settings.DEFAULT_FROM_EMAIL
@@ -52,6 +46,30 @@ def send_welcome_mail(to_email):
     from_email = settings.DEFAULT_FROM_EMAIL
 
     html_content = render_to_string("welcome_email.html")
+    text_content = strip_tags(html_content)
+
+    msg = EmailMultiAlternatives(
+        subject, text_content, from_email, [to_email]
+    )
+    msg.attach_alternative(html_content, "text/html")
+
+    msg.send()
+    
+def send_approval_email(to_email, context):
+    """
+    The function `send_approval_email` sends an approval email to a specified email address using a
+    predefined HTML template and context.
+    
+    :param to_email: The `to_email` parameter is the email address where you want to send the approval
+    email. It should be a string representing a valid email address.
+    :param context: The `context` parameter in the `send_approval_email` function is a dictionary that
+    contains information related to the approval process. This context is used to populate the HTML
+    template for the email.
+    """
+    subject = f"Department({context.get('dept_name', '')}) Approved - Student Pay"
+    from_email = settings.DEFAULT_FROM_EMAIL
+
+    html_content = render_to_string("account_verified.html", context)
     text_content = strip_tags(html_content)
 
     msg = EmailMultiAlternatives(

@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractUser
 from django.utils.translation import gettext_lazy as _
@@ -30,6 +31,7 @@ class CustomUserManager(BaseUserManager):
 
 
 class Department(AbstractUser):
+    dept_id = models.UUIDField(_("Department ID"), primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(
         _("email address"),
         unique=True,
@@ -82,4 +84,9 @@ class Department(AbstractUser):
     class Meta:
         verbose_name = "Department"
         verbose_name_plural = "Departments"
-        ordering = ["created_at"]
+        ordering = ["-updated_at", "-created_at"]
+        
+    @property
+    def id(self):
+        return self.dept_id
+

@@ -1,3 +1,4 @@
+from pprint import pprint
 import requests
 from decouple import config
 
@@ -19,7 +20,7 @@ def resolve_account_number(account_number, bank_code):
         "Authorization": f"Bearer {config("PAYSTACK_SECRET_KEY")}"
     }
     response = requests.get(url=f"https://api.paystack.co/bank/resolve?account_number={account_number}&bank_code={bank_code}", headers=header)
-    return response.json()['data']['account_name']
+    return response.json()
 
 
 def get_banks():

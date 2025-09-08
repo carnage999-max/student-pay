@@ -212,10 +212,15 @@ CRONJOBS = [
 ]
 
 JAZZMIN_SETTINGS = {
+    "custom_css": "css/custom.css",
+    "custom_js": "js/custom.js",
+    "show_ui_builder": True,
     "site_title": "Student Pay Admin",
     "site_header": "Student Pay Admin",
     "site_brand": "Student Pay",
-    "site_logo": "images/student-pay-logo.jpg",
+    "site_logo": 'images/student-pay-logo.jpg',
+    "login_logo": "images/student-pay-logo.jpg", 
+    "user_avatar": None,
     "site_icon": "icons/favicon.ico",
     "welcome_sign": "Welcome to Student Pay",
     "hide_apps": ['auth'],
@@ -246,7 +251,7 @@ JAZZMIN_UI_TWEAKS = {
     "navbar_fixed": False,
     "layout_boxed": False,
     "footer_fixed": False,
-    "sidebar_fixed": False,
+    "sidebar_fixed": True,
     "sidebar": "sidebar-dark-info",
     "sidebar_nav_small_text": False,
     "sidebar_disable_expand": False,
@@ -262,6 +267,7 @@ JAZZMIN_UI_TWEAKS = {
         "info": "btn-info",
         "warning": "btn-warning",
         "danger": "btn-danger",
-        "success": "btn-success",
+        "success": "btn-success"
     },
+    "actions_sticky_top": False
 }
