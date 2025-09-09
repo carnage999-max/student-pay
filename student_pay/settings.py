@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config("DEBUG", default=True, cast=bool)
+DEBUG = config("DEBUG")
 
 ALLOWED_HOSTS = [
     "localhost",
@@ -106,17 +106,17 @@ DATABASES = {
     }
 }
 
-if DEBUG:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.mysql",
-            "NAME": "student_pay_db",
-            "USER": "root",
-            "PASSWORD": config("DB_PASSWORD"),
-            "HOST": "localhost",
-            "PORT": "3306",
-        }
-    }
+# if DEBUG:
+#     DATABASES = {
+#         "default": {
+#             "ENGINE": "django.db.backends.mysql",
+#             "NAME": "student_pay_db",
+#             "USER": "root",
+#             "PASSWORD": config("DB_PASSWORD"),
+#             "HOST": "localhost",
+#             "PORT": "3306",
+#         }
+#     }
 
 
 # Password validation

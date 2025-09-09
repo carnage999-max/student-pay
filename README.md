@@ -2,4 +2,7 @@
 
 ## Database Schema
 
-![Database Schema](schema.png)
+![Database Schema](schema.png) 
+
+## Admin Dashboard
+![screenshot](image.png)
