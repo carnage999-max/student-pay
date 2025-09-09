@@ -96,7 +96,13 @@ class DepartmentAdmin(admin.ModelAdmin):
             dept.bank_code = bank_code
             dept.account_name = account_name
         except requests.HTTPError as e:
-            raise Exception(f"Account resolution failed: {str(e)}")
+            messages.warning(
+            request, 
+            f"⚠️ Account verification failed for {dept.dept_name}: {str(e)}. "
+            "Department approved but requires manual bank verification."
+        )
+            dept.bank_code = get_specific_bank_code(dept.bank_name) if dept.bank_name else ""
+            dept.account_name = "VERIFICATION_FAILED"
 
         # === Step 2: Create Paystack subaccount ===
         url = "https://api.paystack.co/subaccount"

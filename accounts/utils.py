@@ -21,9 +21,8 @@ def resolve_account_number(account_number, bank_code):
         "Authorization": f"Bearer {config("PAYSTACK_SECRET_KEY")}"
     }
     response = requests.get(url=f"https://api.paystack.co/bank/resolve?account_number={account_number}&bank_code={bank_code}", headers=header)
-    # response.raise_for_status()
-    print(response.json())
-    return response.json()
+    response.raise_for_status()
+    return response.json()['data']['account_name']
 
 
 def get_banks():
@@ -32,4 +31,6 @@ def get_banks():
         for bank_name, bank_code in get_bank_codes().items()
     ]
     return banks
+# pprint(get_banks())
+# pprint(resolve_account_number("9159167551", "999991"))
 

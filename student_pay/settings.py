@@ -106,17 +106,17 @@ DATABASES = {
     }
 }
 
-# if DEBUG:
-#     DATABASES = {
-#         "default": {
-#             "ENGINE": "django.db.backends.mysql",
-#             "NAME": "student_pay_db",
-#             "USER": "root",
-#             "PASSWORD": config("DB_PASSWORD"),
-#             "HOST": "localhost",
-#             "PORT": "3306",
-#         }
-#     }
+if DEBUG:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": "student_pay_db",
+            "USER": "root",
+            "PASSWORD": config("DB_PASSWORD"),
+            "HOST": "localhost",
+            "PORT": "3306",
+        }
+    }
 
 
 # Password validation
