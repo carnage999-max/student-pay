@@ -91,36 +91,40 @@ class DepartmentAdmin(admin.ModelAdmin):
         # === Step 1: Resolve account details ===
         try:
             bank_code = get_specific_bank_code(dept.bank_name)
-            account_name = resolve_account_number(dept.account_number, bank_code)
 
             dept.bank_code = bank_code
-            dept.account_name = account_name
         except requests.HTTPError as e:
             messages.warning(
             request, 
             f"⚠️ Account verification failed for {dept.dept_name}: {str(e)}. "
             "Department approved but requires manual bank verification."
         )
-            dept.bank_code = get_specific_bank_code(dept.bank_name) if dept.bank_name else ""
-            dept.account_name = "VERIFICATION_FAILED"
 
         # === Step 2: Create Paystack subaccount ===
-        url = "https://api.paystack.co/subaccount"
-        headers = {
-            "Authorization": f"Bearer {config('PAYSTACK_SECRET_KEY')}",
-            "content_type": "application/json",
-        }
-        data = {
-            "business_name": dept.dept_name,
-            "settlement_bank": bank_code,
-            "account_number": dept.account_number,
-            "percentage_charge": 0,
-        }
-        response = requests.post(url=url, headers=headers, data=data)
-        response.raise_for_status()
+        try:
+            url = "https://api.paystack.co/subaccount"
+            headers = {
+                "Authorization": f"Bearer {config('PAYSTACK_SECRET_KEY')}",
+                "content_type": "application/json",
+            }
+            data = {
+                "business_name": dept.dept_name,
+                "settlement_bank": bank_code,
+                "account_number": dept.account_number,
+                "percentage_charge": 0,
+            }
+            response = requests.post(url=url, headers=headers, data=data)
+            response.raise_for_status()
 
-        sub_account_code = response.json()["data"]["subaccount_code"]
-        dept.sub_account_code = sub_account_code
+            sub_account_code = response.json()["data"]["subaccount_code"]
+            account_name = response.json()["data"]["account_name"]
+            dept.account_name = account_name
+            dept.sub_account_code = sub_account_code
+        except requests.HTTPError as e:
+            if response.status_code == 400:
+                raise Exception(
+                    f"Paystack subaccount creation failed for {dept.dept_name}: {response.json().get('message', 'Unknown error')}"
+                )
 
         # === Step 3: Upload files to Supabase ===
         if dept.logo:
