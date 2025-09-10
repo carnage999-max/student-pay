@@ -39,6 +39,7 @@ class RegisterViewSet(ModelViewSet):
                     "access_token": str(refresh.access_token),
                     "refresh_token": str(refresh),
                     "department_id": serializer.instance.id,
+                    "is_verified": serializer.instance.is_verified
                 },
                 status=status.HTTP_201_CREATED,
                 headers=headers,
