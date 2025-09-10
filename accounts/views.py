@@ -72,6 +72,7 @@ class LoginViewSet(ModelViewSet):
                 "access_token": str(refresh.access_token),
                 "refresh_token": str(refresh),
                 "department_id": user.id,
+                "is_verified": user.is_verified
             },
             status=status.HTTP_200_OK,
         )
