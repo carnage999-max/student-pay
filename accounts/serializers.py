@@ -54,6 +54,7 @@ class DepartmentSerializer(ModelSerializer):
             "secretary_signature_url",
             "secretary_signature",
             "account_name",
+            "is_verified"
         ]
         read_only_fields = [
             "id",
@@ -62,4 +63,5 @@ class DepartmentSerializer(ModelSerializer):
             "president_signature_url",
             "secretary_signature_url",
             "account_name",
+            "is_verified"
         ]
