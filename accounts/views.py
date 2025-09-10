@@ -11,10 +11,6 @@ from .serializers import (
 )
 from utils.permissions import isVerifiedUser
 from django.contrib.auth import authenticate
-from .utils import get_specific_bank_code, resolve_account_number
-from decouple import config
-import requests
-from utils.supabase_util import supabase
 
 
 class RegisterViewSet(ModelViewSet):
@@ -88,13 +84,11 @@ class DepartmentViewSet(ModelViewSet):
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
     permission_classes = [isVerifiedUser]
-    http_method_names = ["get", "put", "patch"]
+    http_method_names = ["get"]
 
     def get_permissions(self):
         if self.action in ["delete"]:
             permission_classes = [IsAuthenticated, isVerifiedUser]
-        elif self.action in ["update", "partial_update"]:
-            permission_classes = [IsAdminUser]
         else:
             permission_classes = [AllowAny]
         return [permission() for permission in permission_classes]
@@ -106,66 +100,4 @@ class DepartmentViewSet(ModelViewSet):
         ):
             return self.queryset.filter(dept_name=self.request.user)
         else:
-            return self.queryset
-
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        bank_name = serializer.validated_data.get("bank_name")
-        account_number = serializer.validated_data.get("account_number")
-        logo = request.FILES.get("logo")
-        president_signature = request.FILES.get("president_signature_url")
-        secretary_signature = request.FILES.get("secretary_signature_url")
-        try:
-            bank_code = get_specific_bank_code(bank_name)
-            account_name = resolve_account_number(account_number, bank_code)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        instance.bank_code = bank_code
-        instance.account_name = account_name
-
-        url = "https://api.paystack.co/subaccount"
-        headers = {
-            "Authorization": f"Bearer {config('PAYSTACK_SECRET_KEY')}",
-            "content_type": "application/json",
-        }
-        data = {
-            "business_name": instance.dept_name,
-            "settlement_bank": bank_code,
-            "account_number": account_number,
-            "percentage_charge": 0,
-        }
-        response = requests.post(url=url, headers=headers, data=data)
-        # Upload Image files to supabase
-
-        # Upload logo if present
-        if logo:
-            supabase.storage.from_("logo").upload(
-                path=logo.name, file=logo.read(), file_options={"upsert": "true"}
-            )
-            instance.logo_url = supabase.storage.from_("logo").get_public_url(logo.name)
-
-        # Upload president signature if present
-        if president_signature:
-            supabase.storage.from_("signatures").upload(
-                path=president_signature.name,
-                file=president_signature.read(),
-                file_options={"upsert": "true"},
-            )
-            instance.president_signature_url = supabase.storage.from_(
-                "signatures"
-            ).get_public_url(president_signature.name)
-        # Upload secretary signature if present
-        if secretary_signature:
-            supabase.storage.from_("signatures").upload(
-                path=secretary_signature.name,
-                file=secretary_signature.read(),
-                file_options={"upsert": "true"},
-            )
-            instance.secretary_signature_url = supabase.storage.from_(
-                "signatures"
-            ).get_public_url(secretary_signature.name)
-        instance.sub_account_code = response.json()["data"]["subaccount_code"]
-        self.perform_update(serializer)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+            return self.queryset.filter(is_verified=True)
