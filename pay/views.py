@@ -215,11 +215,6 @@ class TransactionViewSet(ModelViewSet):
         )
         payments = Payment.objects.filter(department=request.user)
         total_payments = payments.count()
-        if transactions.count() == 0:
-            return Response(
-                {"message": "Department has no transactions yet"},
-                status=status.HTTP_200_OK,
-            )
         total_amount = sum(txn.amount_paid for txn in transactions)
         total_transactions = transactions.count()
 

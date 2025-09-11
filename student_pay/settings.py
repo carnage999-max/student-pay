@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "corsheaders",
     
     'django_crontab',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [
