@@ -10,6 +10,9 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=Department)
 def send_welcome_email_signal(sender, instance, created, **kwargs):
     if created:
-        send_welcome_mail(instance.email)
-        logger.info("Email sent!")
+        try:
+            send_welcome_mail(instance.email)
+            logger.info("Email sent!")
+        except Exception as e:
+            logger.error(f"An error occured, Detail: {str(e)}")
         
