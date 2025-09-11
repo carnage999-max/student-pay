@@ -80,8 +80,8 @@ class TransactionViewSet(ModelViewSet):
         first_name = serializer.validated_data["first_name"]
         last_name = serializer.validated_data["last_name"]
         email = serializer.validated_data["customer_email"]
-        department = Department.objects.get(id=int(request.data.get("department"))).id
-        payment = Payment.objects.get(id=int(request.data.get("payment"))).id
+        department = str(Department.objects.get(id=request.data.get("department")).id)
+        payment = str(Payment.objects.get(id=request.data.get("payment")).id)
         try:
             metadata = dict()
             customer_info = {
