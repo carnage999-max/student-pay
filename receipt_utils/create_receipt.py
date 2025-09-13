@@ -8,6 +8,8 @@ import os
 from pathlib import Path
 import io
 import requests
+import qrcode
+
 
 # Get the directory of the current file
 BASE_DIR = Path(__file__).resolve().parent
@@ -25,21 +27,18 @@ if not os.path.exists(SCHOOL_LOGO_PATH):
 # Register the font
 pdfmetrics.registerFont(TTFont("DejaVuSans", FONT_PATH))
 
-# Receipt size in points (1 inch = 72 points)
+# Receipt size
 RECEIPT_WIDTH = 6.75 * inch  # 486 pt
 RECEIPT_HEIGHT = 3.375 * inch  # 243 pt
 RECEIPT_SIZE = (RECEIPT_WIDTH, RECEIPT_HEIGHT)
 
 
 def load_image(source) -> ImageReader | None:
-    """
-    Loads an image from a given source, either a URL or a local file path, and returns an
-    ImageReader object if successful.
-    """
+    """Load image from URL or local file into ImageReader."""
     if not isinstance(source, str) or not source.strip():
         return None
     try:
-        if source.startswith("http://") or source.startswith("https://"):
+        if source.startswith(("http://", "https://")):
             response = requests.get(source, timeout=5)
             if response.status_code == 200:
                 return ImageReader(io.BytesIO(response.content))
@@ -52,13 +51,19 @@ def load_image(source) -> ImageReader | None:
 
 def generate_receipt(data: dict) -> io.BytesIO:
     """
-    Creates a PDF receipt with logos, header, body information, signatures, and an amount box.
+    Creates a PDF receipt with:
+    - Logos
+    - Header
+    - Body info
+    - Signatures
+    - Amount box
+    - Verification hash + QR code
+    - Watermark
     """
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=RECEIPT_SIZE)
     width, height = RECEIPT_SIZE
 
-    # Margins
     left_margin = 30
     right_margin = width - 30
 
@@ -67,7 +72,6 @@ def generate_receipt(data: dict) -> io.BytesIO:
     logo_height = 40
     logo_y = height - logo_height - 5
 
-    # Draw school logo (left)
     school_logo = load_image(SCHOOL_LOGO_PATH)
     if school_logo:
         c.drawImage(
@@ -79,7 +83,6 @@ def generate_receipt(data: dict) -> io.BytesIO:
             preserveAspectRatio=True,
         )
 
-    # Draw department logo (right)
     dept_logo = load_image(data.get("department_logo"))
     if dept_logo:
         c.drawImage(
@@ -118,13 +121,10 @@ def generate_receipt(data: dict) -> io.BytesIO:
 
     draw_label_line("Date:", data["date"], left_margin, line_y)
     line_y -= spacing
-
     draw_label_line("Received from:", data["received_from"], left_margin, line_y)
     line_y -= spacing
-
     draw_label_line("Being the Payment of:", data["payment_for"], left_margin, line_y)
     line_y -= spacing
-
     draw_label_line(
         "The sum of:", data["amount_words"], left_margin, line_y, double_line=True
     )
@@ -135,7 +135,6 @@ def generate_receipt(data: dict) -> io.BytesIO:
     signature_height = 25
     signature_width = 60
 
-    # President Signature
     pres_sig = load_image(data.get("president_signature"))
     if pres_sig:
         c.drawImage(
@@ -149,7 +148,6 @@ def generate_receipt(data: dict) -> io.BytesIO:
     c.line(left_margin, signature_y, left_margin + 80, signature_y)
     c.drawString(left_margin, signature_y - 12, "President")
 
-    # Financial Secretary Signature
     fin_sig = load_image(data.get("financial_signature"))
     if fin_sig:
         c.drawImage(
@@ -175,8 +173,38 @@ def generate_receipt(data: dict) -> io.BytesIO:
         amount_box_x + amount_box_width / 2, amount_box_y + 6, f"₦ {data['amount']}"
     )
 
+    # === SECURITY HASH / QR ===
+    receipt_hash = data.get("receipt_hash")
+    c.setFont("Helvetica", 7)
+    c.drawString(left_margin, 15, f"Verify: {receipt_hash}")
+
+    qr = qrcode.QRCode(box_size=2, border=1)
+    qr.add_data(f"http://localhost:8000/pay/verify/?hash={receipt_hash}")
+    qr.make(fit=True)
+
+    qr_img = qr.make_image(fill_color="black", back_color="white")
+    qr_io = io.BytesIO()
+    qr_img.save(qr_io, format="PNG")
+    qr_io.seek(0)
+
+    qr_reader = ImageReader(qr_io)
+    c.drawImage(qr_reader, right_margin - 50, 10, width=40, height=40)
+
+    # === WATERMARK (drawn last, transparent) ===
+    if data.get("department_name"):
+        c.saveState()
+        c.setFont("Helvetica-Bold", 40)
+        try:
+            c.setFillAlpha(0.1)  # proper transparency
+        except Exception:
+            c.setFillGray(0.9, 0.3)  # fallback
+        c.translate(width / 2, height / 2)
+        c.rotate(30)
+        c.drawCentredString(0, 0, data["department_name"].upper())
+        c.restoreState()
+
+    # Finish
     c.showPage()
     c.save()
-
     buffer.seek(0)
     return buffer
