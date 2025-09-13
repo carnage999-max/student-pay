@@ -1,4 +1,5 @@
 # receipt_utils/create_receipt.py
+from django.conf import settings
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 from reportlab.lib.utils import ImageReader
@@ -9,7 +10,6 @@ from pathlib import Path
 import io
 import requests
 import qrcode
-
 
 # Get the directory of the current file
 BASE_DIR = Path(__file__).resolve().parent
@@ -39,26 +39,35 @@ def load_image(source) -> ImageReader | None:
         return None
     try:
         if source.startswith(("http://", "https://")):
+            # network fetch (consider caching these at upload time to avoid latency)
             response = requests.get(source, timeout=5)
             if response.status_code == 200:
                 return ImageReader(io.BytesIO(response.content))
         elif os.path.exists(source):
             return ImageReader(source)
     except Exception as e:
+        # Keep failures quiet — receipt still renders without the image
         print(f"Error loading image: {e}")
     return None
+
+
+def _get_verify_url(receipt_hash: str) -> str:
+    """Build verify URL (use settings.SITE_URL if provided)."""
+    base = getattr(settings, "SITE_URL", None) or ("http://localhost:8000")
+    # endpoint used by your system
+    return f"{base.rstrip('/')}/pay/verify/?hash={receipt_hash}"
 
 
 def generate_receipt(data: dict) -> io.BytesIO:
     """
     Creates a PDF receipt with:
-    - Logos
-    - Header
-    - Body info
-    - Signatures
-    - Amount box
-    - Verification hash + QR code
-    - Watermark
+      - Logos
+      - Header
+      - Body info
+      - Signatures
+      - Amount box
+      - Verification hash + QR code (positioned next to amount box)
+      - Watermark (department name; drawn last so it sits on top)
     """
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=RECEIPT_SIZE)
@@ -83,6 +92,7 @@ def generate_receipt(data: dict) -> io.BytesIO:
             preserveAspectRatio=True,
         )
 
+    # dept logo can be a URL or local path in data["department_logo"]
     dept_logo = load_image(data.get("department_logo"))
     if dept_logo:
         c.drawImage(
@@ -96,7 +106,7 @@ def generate_receipt(data: dict) -> io.BytesIO:
 
     # === HEADER ===
     c.setFont("Helvetica-Bold", 14)
-    c.drawCentredString(width / 2, height - 30, data["header"])
+    c.drawCentredString(width / 2, height - 30, data.get("header", ""))
 
     # Receipt tag
     c.setFont("Helvetica-Bold", 11)
@@ -113,20 +123,30 @@ def generate_receipt(data: dict) -> io.BytesIO:
         c.drawString(x, y, label_text)
         label_width = c.stringWidth(label_text, "Helvetica", 10)
         line_start_x = x + label_width + 5
-        c.drawString(line_start_x, y, value)
+        # if value is long, it will wrap visually; keep it simple for now
+        c.drawString(line_start_x, y, str(value))
         line_end_x = width - 40
         c.line(line_start_x, y - 2, line_end_x, y - 2)
         if double_line:
             c.line(line_start_x, y - 2 - spacing, line_end_x, y - 2 - spacing)
 
-    draw_label_line("Date:", data["date"], left_margin, line_y)
-    line_y -= spacing
-    draw_label_line("Received from:", data["received_from"], left_margin, line_y)
-    line_y -= spacing
-    draw_label_line("Being the Payment of:", data["payment_for"], left_margin, line_y)
+    # required fields expected in data: date, received_from, payment_for, amount_words, amount
+    draw_label_line("Date:", data.get("date", ""), left_margin, line_y)
     line_y -= spacing
     draw_label_line(
-        "The sum of:", data["amount_words"], left_margin, line_y, double_line=True
+        "Received from:", data.get("received_from", ""), left_margin, line_y
+    )
+    line_y -= spacing
+    draw_label_line(
+        "Being the Payment of:", data.get("payment_for", ""), left_margin, line_y
+    )
+    line_y -= spacing
+    draw_label_line(
+        "The sum of:",
+        data.get("amount_words", ""),
+        left_margin,
+        line_y,
+        double_line=True,
     )
     line_y -= spacing * 1.5
 
@@ -170,37 +190,57 @@ def generate_receipt(data: dict) -> io.BytesIO:
     c.rect(amount_box_x, amount_box_y, amount_box_width, amount_box_height)
     c.setFont("DejaVuSans", 11)
     c.drawCentredString(
-        amount_box_x + amount_box_width / 2, amount_box_y + 6, f"₦ {data['amount']}"
+        amount_box_x + amount_box_width / 2,
+        amount_box_y + 6,
+        f"₦ {data.get('amount', '')}",
     )
 
-    # === SECURITY HASH / QR ===
-    receipt_hash = data.get("receipt_hash")
+    # === SECURITY HASH + QR (placed to the right of amount box, not over signatures) ===
+    receipt_hash = data.get("receipt_hash", "")
     c.setFont("Helvetica", 7)
     c.drawString(left_margin, 15, f"Verify: {receipt_hash}")
 
-    qr = qrcode.QRCode(box_size=2, border=1)
-    qr.add_data(f"http://localhost:8000/pay/verify/?hash={receipt_hash}")
-    qr.make(fit=True)
+    # Compose verify URL
+    verify_url = _get_verify_url(receipt_hash)
 
+    # Build QR (in-memory)
+    qr = qrcode.QRCode(box_size=2, border=1)
+    qr.add_data(verify_url)
+    qr.make(fit=True)
     qr_img = qr.make_image(fill_color="black", back_color="white")
+
     qr_io = io.BytesIO()
     qr_img.save(qr_io, format="PNG")
     qr_io.seek(0)
-
     qr_reader = ImageReader(qr_io)
-    c.drawImage(qr_reader, right_margin - 50, 10, width=40, height=40)
 
-    # === WATERMARK (drawn last, transparent) ===
-    if data.get("department_name"):
+    # Position QR immediately to the right of the amount box and keep it from overlapping signatures
+    qr_size = 40  # px (keeps QR compact)
+    qr_x = amount_box_x + amount_box_width + 8
+    # If QR would run off the page to the right, move it left of the amount box instead
+    if qr_x + qr_size > right_margin:
+        qr_x = amount_box_x - qr_size - 8
+    qr_y = amount_box_y - 5  # slightly below the amount box center
+
+    c.drawImage(qr_reader, qr_x, qr_y, width=qr_size, height=qr_size)
+
+    # === WATERMARK (drawn last so it appears on top) ===
+    dept_for_watermark = data.get("department_name") or data.get("header") or ""
+    if dept_for_watermark:
         c.saveState()
-        c.setFont("Helvetica-Bold", 40)
+        # larger but not overwhelming
+        c.setFont("Helvetica-Bold", 36)
+        # Try to use alpha if available, otherwise fall back to light gray
         try:
-            c.setFillAlpha(0.1)  # proper transparency
+            c.setFillAlpha(0.12)  # if supported by ReportLab version
+            c.setFillColorRGB(0.1, 0.1, 0.1)  # dark but transparent
         except Exception:
-            c.setFillGray(0.9, 0.3)  # fallback
+            # fallback: light gray (no alpha)
+            c.setFillGray(0.85)
+        # center, rotate and draw
         c.translate(width / 2, height / 2)
         c.rotate(30)
-        c.drawCentredString(0, 0, data["department_name"].upper())
+        c.drawCentredString(0, 0, str(dept_for_watermark).upper())
         c.restoreState()
 
     # Finish
