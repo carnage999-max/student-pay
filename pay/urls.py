@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import TransactionViewSet, get_banks, generate_receipt_with_reference, export_transactions_to_csv
+from .views import TransactionViewSet, get_banks, generate_receipt_with_reference, export_transactions_to_csv, verify_receipt
 
 
 router = DefaultRouter()
@@ -11,4 +11,5 @@ urlpatterns = [
     path("list-banks/", get_banks, name="list_banks"),
     path("generate-receipt/", generate_receipt_with_reference, name="generate_receipt"),
     path('export-transactions/', export_transactions_to_csv, name='export_transactions'),
+    path('verify/', verify_receipt, name='verify-receipt'), 
 ]

@@ -46,6 +46,8 @@ class Transaction(models.Model):
     receipt_url = models.CharField(
         _("Receipt URL"), max_length=200, null=True, blank=True
     )
+    receipt_hash = models.CharField(_("Receipt Hash"), max_length=64, unique=True, editable=False)
+
 
     def __str__(self):
         return self.received_from

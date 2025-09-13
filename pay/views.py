@@ -23,6 +23,7 @@ from num2words import num2words
 from receipt_utils.create_receipt import generate_receipt
 from receipt_utils.upload_receipt import upload_receipt
 import logging
+import hashlib
 
 
 logger = logging.getLogger(__name__)
@@ -154,7 +155,6 @@ class TransactionViewSet(ModelViewSet):
             )
         else:
             # Verify transaction and get data for saving to db and for creating receipt
-
             transaction = Transaction.objects.create(**receipt_data["save_data"])
             try:
                 # Receipt generation logic and error handling
@@ -162,7 +162,7 @@ class TransactionViewSet(ModelViewSet):
                 pdf_stream.seek(0)
 
                 receipt_url = upload_receipt(filename, pdf_stream)
-                context = {
+                email_context = {
                     "header": receipt_data["receipt_data"]["header"],
                     "date": receipt_data["receipt_data"]["date"],
                     "received_from": receipt_data["receipt_data"]["received_from"],
@@ -173,7 +173,7 @@ class TransactionViewSet(ModelViewSet):
                     # sending receipt to customer email
                     send_receipt_email(
                         to_email=receipt_data["save_data"]["customer_email"],
-                        context=context,
+                        context=email_context,
                         pdf_file=pdf_stream,
                         filename=filename,
                     )
@@ -344,3 +344,20 @@ def export_transactions_to_csv(request):
         writer.writerow(transaction.values())
 
     return response
+
+@api_view(['GET'])
+def verify_receipt(request):
+    receipt_hash = request.query_params.get('hash')
+    if not receipt_hash:
+        return Response({'detail': "Missing Hash"}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        txn = Transaction.objects.get(receipt_hash=receipt_hash)
+        return Response({
+            "status": "valid",
+            "transaction_id": txn.txn_id,
+            "amount": txn.amount_paid,
+            "date": txn.created_at,
+            "department": txn.department.dept_name
+        })
+    except Transaction.DoesNotExist:
+        return Response({"status": "Invalid"}, status=status.HTTP_404_NOT_FOUND)
