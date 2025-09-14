@@ -273,4 +273,4 @@ JAZZMIN_UI_TWEAKS = {
     "actions_sticky_top": False
 }
 
-SITE_URL = "https://student-pay-backend.onrender.com/"
+SITE_URL = "https://student-pay.sevalla.app/"
