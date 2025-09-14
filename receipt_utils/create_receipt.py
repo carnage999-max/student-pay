@@ -1,4 +1,3 @@
-# receipt_utils/create_receipt.py
 from django.conf import settings
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
@@ -11,14 +10,11 @@ import io
 import requests
 import qrcode
 
-# Get the directory of the current file
-BASE_DIR = Path(__file__).resolve().parent
 
-# Paths to font and logo files
+BASE_DIR = Path(__file__).resolve().parent
 FONT_PATH = os.path.join(BASE_DIR, "DejaVuSans.ttf")
 SCHOOL_LOGO_PATH = os.path.join(BASE_DIR, "school_logo.png")
 
-# Validate file existence
 if not os.path.exists(FONT_PATH):
     raise FileNotFoundError(f"Font file not found at: {FONT_PATH}")
 if not os.path.exists(SCHOOL_LOGO_PATH):
@@ -28,8 +24,8 @@ if not os.path.exists(SCHOOL_LOGO_PATH):
 pdfmetrics.registerFont(TTFont("DejaVuSans", FONT_PATH))
 
 # Receipt size
-RECEIPT_WIDTH = 6.75 * inch  # 486 pt
-RECEIPT_HEIGHT = 3.375 * inch  # 243 pt
+RECEIPT_WIDTH = 6.75 * inch
+RECEIPT_HEIGHT = 3.375 * inch
 RECEIPT_SIZE = (RECEIPT_WIDTH, RECEIPT_HEIGHT)
 
 
@@ -54,7 +50,6 @@ def load_image(source) -> ImageReader | None:
 def _get_verify_url(receipt_hash: str) -> str:
     """Build verify URL (use settings.SITE_URL if provided)."""
     base = getattr(settings, "SITE_URL", None) or ("http://localhost:8000")
-    # endpoint used by your system
     return f"{base.rstrip('/')}/pay/verify/?hash={receipt_hash}"
 
 
