@@ -50,7 +50,7 @@ def load_image(source) -> ImageReader | None:
 def _get_verify_url(receipt_hash: str) -> str:
     """Build verify URL (use settings.SITE_URL if provided)."""
     base = getattr(settings, "SITE_URL", None) or ("http://localhost:8000")
-    return f"{base.rstrip('/')}/payment/pay/verify/?hash={receipt_hash}"
+    return f"{base.rstrip('/')}/payment/pay/verify-receipt/?hash={receipt_hash}"
 
 
 def generate_receipt(data: dict) -> io.BytesIO:
