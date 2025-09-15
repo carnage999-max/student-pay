@@ -134,9 +134,9 @@ def generate_receipt(data: dict) -> io.BytesIO:
     )
 
     # Receipt tag
-    c.setFont("Helvetica-Bold", 11)
-    c.rect(width / 2 - 35, height - 60, 70, 18)
-    c.drawCentredString(width / 2, height - 56, "RECEIPT")
+    # c.setFont("Helvetica-Bold", 11)
+    # c.rect(width / 2 - 35, height - 60, 70, 18)
+    # c.drawCentredString(width / 2, height - 56, "RECEIPT")
 
     # === BODY ===
     c.setFont("Helvetica", 10)
