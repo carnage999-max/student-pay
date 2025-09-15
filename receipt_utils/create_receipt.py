@@ -20,7 +20,6 @@ if not os.path.exists(FONT_PATH):
 if not os.path.exists(SCHOOL_LOGO_PATH):
     raise FileNotFoundError(f"School logo file not found at: {SCHOOL_LOGO_PATH}")
 
-# Register the font
 pdfmetrics.registerFont(TTFont("DejaVuSans", FONT_PATH))
 
 # Receipt size
@@ -35,25 +34,33 @@ def load_image(source) -> ImageReader | None:
         return None
     try:
         if source.startswith(("http://", "https://")):
-            # network fetch (consider caching these at upload time to avoid latency)
             response = requests.get(source, timeout=5)
             if response.status_code == 200:
                 return ImageReader(io.BytesIO(response.content))
         elif os.path.exists(source):
             return ImageReader(source)
     except Exception as e:
-        # Keep failures quiet — receipt still renders without the image
         print(f"Error loading image: {e}")
     return None
 
-def draw_multiline_header(canvas, text, center_x, start_y, max_width, font_size=14):
-    """Break long headers into multiple lines"""
-    words = text.split()
-    lines = []
-    current_line = []
-    
+
+def draw_multiline_header(
+    canvas, text, center_x, start_y, max_width, base_font_size=14
+):
+    """Break long headers into multiple lines, auto-resize font if too long."""
+    font_size = base_font_size
+    # shrink font until the longest word fits in max_width
+    longest_word = max(text.split(), key=len, default="")
+    while (
+        canvas.stringWidth(longest_word, "Helvetica-Bold", font_size) > max_width
+        and font_size > 8
+    ):
+        font_size -= 1
+
     canvas.setFont("Helvetica-Bold", font_size)
-    
+    words = text.split()
+    lines, current_line = [], []
+
     for word in words:
         test_line = " ".join(current_line + [word])
         if canvas.stringWidth(test_line, "Helvetica-Bold", font_size) <= max_width:
@@ -62,11 +69,10 @@ def draw_multiline_header(canvas, text, center_x, start_y, max_width, font_size=
             if current_line:
                 lines.append(" ".join(current_line))
             current_line = [word]
-    
     if current_line:
         lines.append(" ".join(current_line))
-    
-    # Draw lines
+
+    # Draw each line centered
     line_height = font_size + 2
     y_pos = start_y
     for line in lines:
@@ -75,22 +81,11 @@ def draw_multiline_header(canvas, text, center_x, start_y, max_width, font_size=
 
 
 def _get_verify_url(receipt_hash: str) -> str:
-    """Build verify URL (use settings.SITE_URL if provided)."""
     base = getattr(settings, "SITE_URL", None) or ("http://localhost:8000")
     return f"{base.rstrip('/')}/payment/pay/verify-receipt/?hash={receipt_hash}"
 
 
 def generate_receipt(data: dict) -> io.BytesIO:
-    """
-    Creates a PDF receipt with:
-      - Logos
-      - Header
-      - Body info
-      - Signatures
-      - Amount box
-      - Verification hash + QR code (positioned next to amount box)
-      - Watermark (department name; drawn last so it sits on top)
-    """
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=RECEIPT_SIZE)
     width, height = RECEIPT_SIZE
@@ -99,8 +94,7 @@ def generate_receipt(data: dict) -> io.BytesIO:
     right_margin = width - 30
 
     # === LOGOS ===
-    logo_width = 40
-    logo_height = 40
+    logo_width, logo_height = 40, 40
     logo_y = height - logo_height - 5
 
     school_logo = load_image(SCHOOL_LOGO_PATH)
@@ -114,7 +108,6 @@ def generate_receipt(data: dict) -> io.BytesIO:
             preserveAspectRatio=True,
         )
 
-    # dept logo can be a URL or local path in data["department_logo"]
     dept_logo = load_image(data.get("department_logo"))
     if dept_logo:
         c.drawImage(
@@ -126,35 +119,40 @@ def generate_receipt(data: dict) -> io.BytesIO:
             preserveAspectRatio=True,
         )
 
-    # === HEADER ===
-    logo_space = 80  # 40px logo + 40px padding on each side
-    max_header_width = width - logo_space
-    draw_multiline_header(c, data.get("header", ""), width/2, height-30, max_header_width)
+    # === HEADER (bounded between logos, dynamically scaled) ===
+    max_header_x_left = left_margin + logo_width + 15
+    max_header_x_right = right_margin - logo_width - 15
+    max_header_width = max_header_x_right - max_header_x_left
+    center_x = (max_header_x_left + max_header_x_right) / 2
+
+    draw_multiline_header(
+        c,
+        data.get("header", ""),
+        center_x,
+        height - 30,
+        max_header_width,
+    )
 
     # Receipt tag
     c.setFont("Helvetica-Bold", 11)
     c.rect(width / 2 - 35, height - 50, 70, 18)
     c.drawCentredString(width / 2, height - 46, "RECEIPT")
-    
 
     # === BODY ===
     c.setFont("Helvetica", 10)
-    line_y = height - 75
-    spacing = 17
+    line_y, spacing = height - 75, 17
 
     def draw_label_line(label, value, x, y, double_line=False):
         label_text = f"{label} "
         c.drawString(x, y, label_text)
         label_width = c.stringWidth(label_text, "Helvetica", 10)
         line_start_x = x + label_width + 5
-        # if value is long, it will wrap visually; keep it simple for now
         c.drawString(line_start_x, y, str(value))
         line_end_x = width - 40
         c.line(line_start_x, y - 2, line_end_x, y - 2)
         if double_line:
             c.line(line_start_x, y - 2 - spacing, line_end_x, y - 2 - spacing)
 
-    # required fields expected in data: date, received_from, payment_for, amount_words, amount
     draw_label_line("Date:", data.get("date", ""), left_margin, line_y)
     line_y -= spacing
     draw_label_line(
@@ -175,10 +173,7 @@ def generate_receipt(data: dict) -> io.BytesIO:
     line_y -= spacing * 1.5
 
     # === SIGNATURES ===
-    signature_y = 40
-    signature_height = 25
-    signature_width = 60
-
+    signature_y, signature_height, signature_width = 40, 25, 60
     pres_sig = load_image(data.get("president_signature"))
     if pres_sig:
         c.drawImage(
@@ -206,8 +201,7 @@ def generate_receipt(data: dict) -> io.BytesIO:
     c.drawRightString(right_margin, signature_y - 12, "Financial Secretary")
 
     # === AMOUNT BOX ===
-    amount_box_width = 80
-    amount_box_height = 20
+    amount_box_width, amount_box_height = 80, 20
     amount_box_x = (width - amount_box_width) / 2
     amount_box_y = signature_y - (amount_box_height / 2)
 
@@ -219,15 +213,12 @@ def generate_receipt(data: dict) -> io.BytesIO:
         f"₦ {data.get('amount', '')}",
     )
 
-    # === SECURITY HASH + QR (placed to the right of amount box, not over signatures) ===
+    # === SECURITY HASH + QR ===
     receipt_hash = data.get("receipt_hash", "")
     c.setFont("Helvetica", 7)
     c.drawString(left_margin, 15, f"Verify: {receipt_hash}")
 
-    # Compose verify URL
     verify_url = _get_verify_url(receipt_hash)
-
-    # Build QR (in-memory)
     qr = qrcode.QRCode(box_size=2, border=1)
     qr.add_data(verify_url)
     qr.make(fit=True)
@@ -238,36 +229,28 @@ def generate_receipt(data: dict) -> io.BytesIO:
     qr_io.seek(0)
     qr_reader = ImageReader(qr_io)
 
-    # Position QR immediately to the right of the amount box and keep it from overlapping signatures
-    qr_size = 40  # px (keeps QR compact)
+    qr_size = 40
     qr_x = amount_box_x + amount_box_width + 8
-    # If QR would run off the page to the right, move it left of the amount box instead
     if qr_x + qr_size > right_margin:
         qr_x = amount_box_x - qr_size - 8
-    qr_y = amount_box_y - 5  # slightly below the amount box center
-
+    qr_y = amount_box_y - 5
     c.drawImage(qr_reader, qr_x, qr_y, width=qr_size, height=qr_size)
 
-    # === WATERMARK (drawn last so it appears on top) ===
+    # === WATERMARK ===
     dept_for_watermark = data.get("department_name") or data.get("header") or ""
     if dept_for_watermark:
         c.saveState()
-        # larger but not overwhelming
         c.setFont("Helvetica-Bold", 36)
-        # Try to use alpha if available, otherwise fall back to light gray
         try:
-            c.setFillAlpha(0.12)  # if supported by ReportLab version
-            c.setFillColorRGB(0.1, 0.1, 0.1)  # dark but transparent
+            c.setFillAlpha(0.12)
+            c.setFillColorRGB(0.1, 0.1, 0.1)
         except Exception:
-            # fallback: light gray (no alpha)
             c.setFillGray(0.85)
-        # center, rotate and draw
         c.translate(width / 2, height / 2)
         c.rotate(30)
         c.drawCentredString(0, 0, str(dept_for_watermark).upper())
         c.restoreState()
 
-    # Finish
     c.showPage()
     c.save()
     buffer.seek(0)
