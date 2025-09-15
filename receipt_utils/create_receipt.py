@@ -46,6 +46,19 @@ def load_image(source) -> ImageReader | None:
         print(f"Error loading image: {e}")
     return None
 
+def draw_fitted_header(canvas, text, x, y, max_width, font_size=14):
+    """Draw header text, shrinking font if needed to fit within max_width"""
+    canvas.setFont("Helvetica-Bold", font_size)
+    text_width = canvas.stringWidth(text, "Helvetica-Bold", font_size)
+    
+    if text_width > max_width:
+        # Calculate new font size to fit
+        new_font_size = (max_width / text_width) * font_size
+        new_font_size = max(8, new_font_size)  # Minimum readable size
+        canvas.setFont("Helvetica-Bold", new_font_size)
+    
+    canvas.drawCentredString(x, y, text)
+
 
 def _get_verify_url(receipt_hash: str) -> str:
     """Build verify URL (use settings.SITE_URL if provided)."""
@@ -100,13 +113,15 @@ def generate_receipt(data: dict) -> io.BytesIO:
         )
 
     # === HEADER ===
-    c.setFont("Helvetica-Bold", 14)
-    c.drawCentredString(width / 2, height - 30, data.get("header", ""))
+    logo_space = 80  # 40px logo + 40px padding on each side
+    max_header_width = width - logo_space
+    draw_fitted_header(c, data.get("header", ""), width/2, height-30, max_header_width)
 
     # Receipt tag
     c.setFont("Helvetica-Bold", 11)
     c.rect(width / 2 - 35, height - 50, 70, 18)
     c.drawCentredString(width / 2, height - 46, "RECEIPT")
+    
 
     # === BODY ===
     c.setFont("Helvetica", 10)
