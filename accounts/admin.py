@@ -9,7 +9,7 @@ from accounts.utils import get_specific_bank_code, resolve_account_number
 from .models import Department
 from .forms import DepartmentAdminForm
 from pay.utils import send_approval_email, send_rejection_email
-from utils.supabase_util import supabase
+from utils.supabase_util import upload_to_supabase
 
 
 @admin.register(Department)
@@ -95,10 +95,10 @@ class DepartmentAdmin(admin.ModelAdmin):
             dept.bank_code = bank_code
         except requests.HTTPError as e:
             messages.warning(
-            request, 
-            f"⚠️ Account verification failed for {dept.dept_name}: {str(e)}. "
-            "Department approved but requires manual bank verification."
-        )
+                request,
+                f"⚠️ Account verification failed for {dept.dept_name}: {str(e)}. "
+                "Department approved but requires manual bank verification.",
+            )
 
         # === Step 2: Create Paystack subaccount ===
         try:
@@ -128,42 +128,27 @@ class DepartmentAdmin(admin.ModelAdmin):
 
         # === Step 3: Upload files to Supabase ===
         if dept.logo:
-            supabase.storage.from_("logo").upload(
-                path=dept.logo.name,
-                file=dept.logo.read(),
-                file_options={"upsert": "true"},
-            )
-            dept.logo_url = supabase.storage.from_("logo").get_public_url(
-                dept.logo.name
-            )
+            dept.logo_url = upload_to_supabase("logo", dept.logo.name, dept.logo.read())
             if dept.logo.path and os.path.exists(dept.logo.path):
                 os.remove(dept.logo.path)
 
         if dept.president_signature:
-            supabase.storage.from_("signatures").upload(
-                path=dept.president_signature.name,
-                file=dept.president_signature.read(),
-                file_options={"upsert": "true"},
+            dept.president_signature_url = upload_to_supabase(
+                "signatures",
+                dept.president_signature.name,
+                dept.president_signature.read(),
             )
-            dept.president_signature_url = supabase.storage.from_(
-                "signatures"
-            ).get_public_url(dept.president_signature.name)
-
             if dept.president_signature.path and os.path.exists(
                 dept.president_signature.path
             ):
                 os.remove(dept.president_signature.path)
 
         if dept.secretary_signature:
-            supabase.storage.from_("signatures").upload(
-                path=dept.secretary_signature.name,
-                file=dept.secretary_signature.read(),
-                file_options={"upsert": "true"},
+            dept.secretary_signature_url = upload_to_supabase(
+                "signatures",
+                dept.secretary_signature.name,
+                dept.secretary_signature.read(),
             )
-            dept.secretary_signature_url = supabase.storage.from_(
-                "signatures"
-            ).get_public_url(dept.secretary_signature.name)
-
             if dept.secretary_signature.path and os.path.exists(
                 dept.secretary_signature.path
             ):
@@ -191,8 +176,8 @@ class DepartmentAdmin(admin.ModelAdmin):
             dept = Department.objects.get(pk=id)
             self._approve_department(request, dept)
             messages.success(
-            request, f"✅ Department {dept.dept_name} approved successfully."
-        )
+                request, f"✅ Department {dept.dept_name} approved successfully."
+            )
 
         except Exception as e:
             messages.error(request, f"❌ Failed to approve department: {str(e)}")
@@ -203,12 +188,12 @@ class DepartmentAdmin(admin.ModelAdmin):
             dept = Department.objects.get(pk=id)
             dept.is_verified = False
             dept.save()
-            
+
             email_context = {
-            "dept_name": dept.dept_name,
-            "review_date": dept.updated_at,
-            "dept_id": dept.id,
-        }
+                "dept_name": dept.dept_name,
+                "review_date": dept.updated_at,
+                "dept_id": dept.id,
+            }
             send_rejection_email(dept.email, email_context)
             messages.warning(request, f"❌ Department {dept.dept_name} rejected.")
         except Exception as e:
@@ -242,3 +227,33 @@ class DepartmentAdmin(admin.ModelAdmin):
     reject_departments.short_description = "Reject selected departments"
 
     actions = [approve_departments, reject_departments]
+
+    def save_model(self, request, obj, form, change):
+        """
+        Override save_model so that if a verified department updates its logo or signatures,
+        we sync the new file(s) to Supabase and clean up the old ones.
+        """
+        if change and obj.is_verified:
+            # track old versions
+            old_obj = Department.objects.get(pk=obj.pk)
+
+            file_fields = ["logo", "president_signature", "secretary_signature"]
+            for field in file_fields:
+                old_file = getattr(old_obj, field)
+                new_file = getattr(obj, field)
+
+                # Only process if a new file is uploaded
+                if new_file and old_file != new_file:
+                    # upload new file
+                    supabase_url = upload_to_supabase(
+                        "signatures" if field != "logo" else "logo",
+                        new_file.name,
+                        new_file.read(),
+                    )
+                    setattr(obj, f"{field}_url", supabase_url)
+
+                    # delete old file from Supabase if it existed
+                    # if old_file:
+                    #     delete_from_supabase(old_file)
+
+        super().save_model(request, obj, form, change)
