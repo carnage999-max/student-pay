@@ -46,18 +46,32 @@ def load_image(source) -> ImageReader | None:
         print(f"Error loading image: {e}")
     return None
 
-def draw_fitted_header(canvas, text, x, y, max_width, font_size=14):
-    """Draw header text, shrinking font if needed to fit within max_width"""
+def draw_multiline_header(canvas, text, center_x, start_y, max_width, font_size=14):
+    """Break long headers into multiple lines"""
+    words = text.split()
+    lines = []
+    current_line = []
+    
     canvas.setFont("Helvetica-Bold", font_size)
-    text_width = canvas.stringWidth(text, "Helvetica-Bold", font_size)
     
-    if text_width > max_width:
-        # Calculate new font size to fit
-        new_font_size = (max_width / text_width) * font_size
-        new_font_size = max(8, new_font_size)  # Minimum readable size
-        canvas.setFont("Helvetica-Bold", new_font_size)
+    for word in words:
+        test_line = " ".join(current_line + [word])
+        if canvas.stringWidth(test_line, "Helvetica-Bold", font_size) <= max_width:
+            current_line.append(word)
+        else:
+            if current_line:
+                lines.append(" ".join(current_line))
+            current_line = [word]
     
-    canvas.drawCentredString(x, y, text)
+    if current_line:
+        lines.append(" ".join(current_line))
+    
+    # Draw lines
+    line_height = font_size + 2
+    y_pos = start_y
+    for line in lines:
+        canvas.drawCentredString(center_x, y_pos, line)
+        y_pos -= line_height
 
 
 def _get_verify_url(receipt_hash: str) -> str:
@@ -115,7 +129,7 @@ def generate_receipt(data: dict) -> io.BytesIO:
     # === HEADER ===
     logo_space = 80  # 40px logo + 40px padding on each side
     max_header_width = width - logo_space
-    draw_fitted_header(c, data.get("header", ""), width/2, height-30, max_header_width)
+    draw_multiline_header(c, data.get("header", ""), width/2, height-30, max_header_width)
 
     # Receipt tag
     c.setFont("Helvetica-Bold", 11)
