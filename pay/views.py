@@ -139,7 +139,7 @@ class TransactionViewSet(ModelViewSet):
         reference = request.query_params.get("trxref")
         txn = Transaction.objects.filter(txn_reference=reference)
         receipt_data = getReceiptData(reference)
-        filename = f"{receipt_data['receipt_data']['received_from'].replace(' ', '_')}_{receipt_data['receipt_data']['date']}.pdf"
+        filename = f"{receipt_data['receipt_data']['payment_for'].replace(' ', '_')}_{receipt_data['receipt_data']['received_from']}.pdf"
         if "error" in receipt_data:
             logger.error(f"Error verifying Transaction")
             return Response(
