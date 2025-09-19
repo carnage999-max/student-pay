@@ -210,7 +210,6 @@ class TransactionViewSet(ModelViewSet):
                 )
 
     @method_decorator(cache_page(60*60))
-    @method_decorator(vary_on_headers('Authorization'))
     @action(
         detail=False,
         methods=["GET"],
