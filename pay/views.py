@@ -8,8 +8,9 @@ from rest_framework.filters import OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django.http import HttpResponse, JsonResponse
 from django.conf import settings
-
-# from pay.utils import send_receipt_email
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_headers
 from utils.fetchReceiptData import getReceiptData
 from .filters import TransactionFilter
 from utils.pagination import CustomResultsSetPagination
@@ -48,6 +49,10 @@ class PaymentViewSet(ModelViewSet):
                 department=Department.objects.get(pk=department_id)
             )
         return self.queryset
+    
+    @method_decorator(cache_page(60*20))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 class TransactionViewSet(ModelViewSet):
@@ -118,7 +123,8 @@ class TransactionViewSet(ModelViewSet):
         return Response(
             {"authorization_url": authorization_url}, status=status.HTTP_200_OK
         )
-
+        
+    @method_decorator(cache_page(60*30))
     @action(
         methods=["GET"],
         detail=False,
@@ -203,6 +209,8 @@ class TransactionViewSet(ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
+    @method_decorator(cache_page(60*60))
+    @method_decorator(vary_on_headers('Authorization'))
     @action(
         detail=False,
         methods=["GET"],
