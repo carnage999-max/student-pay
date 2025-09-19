@@ -8,5 +8,10 @@
         "supabase",
         "ttfonts"
     ],
-    "docwriter.progress.trackClasses": false
+    "docwriter.progress.trackClasses": false,
+    "files.associations": {
+        "*.js": "javascript",
+        "*.html": "html",
+        "plyconfig.json": "jsonc"
+    }
 }
