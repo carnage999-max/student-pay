@@ -209,7 +209,7 @@ class TransactionViewSet(ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-    @method_decorator(cache_page(60*60))
+    @method_decorator(cache_page(60*5))
     @action(
         detail=False,
         methods=["GET"],
