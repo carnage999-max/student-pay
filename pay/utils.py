@@ -95,6 +95,8 @@ def send_rejection_email(to_email, context):
 
     html_content = render_to_string("account_rejected.html", context)
     text_content = strip_tags(html_content)
+    
+    print("Sending rejection email to:", to_email)
 
     msg = EmailMultiAlternatives(
         subject, text_content, from_email, [to_email]

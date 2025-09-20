@@ -49,9 +49,6 @@ class PaymentViewSet(ModelViewSet):
                 department=Department.objects.get(pk=department_id)
             )
         return self.queryset
-    
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
 
 
 class TransactionViewSet(ModelViewSet):
