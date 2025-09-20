@@ -50,7 +50,6 @@ class PaymentViewSet(ModelViewSet):
             )
         return self.queryset
     
-    @method_decorator(cache_page(60*20))
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
