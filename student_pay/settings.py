@@ -57,6 +57,8 @@ INSTALLED_APPS = [
     
     'django_crontab',
     'rest_framework_simplejwt.token_blacklist',
+    
+    'anymail',
 ]
 
 MIDDLEWARE = [
@@ -198,15 +200,15 @@ STORAGES = {
     },
 }
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = config("EMAIL_HOST", default="smtp.gmail.com")
-EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)
-EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)
-EMAIL_HOST_USER = config("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
-DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL")
+EMAIL_BACKEND = "anymail.backends.mailjet.EmailBackend"
+
+ANYMAIL = {
+    "MAILJET_API_KEY": config('MAILJET_API_KEY'),
+    "MAILJET_SECRET_KEY": config('MAILJET_SECRET_KEY'),
+}
 
 MAILJET_SENDER_EMAIL = config("MAILJET_SENDER_EMAIL")
+DEFAULT_FROM_EMAIL = MAILJET_SENDER_EMAIL
 
 CRONJOBS = [
     ('*/14 * * * *', 'student_pay.cron.keep_alive')
